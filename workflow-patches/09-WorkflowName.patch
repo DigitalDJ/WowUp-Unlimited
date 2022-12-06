@@ -1,0 +1,8 @@
+--- .github/workflows/electron-all-build.yml
++++ .github/workflows/electron-all-build.yml
+@@ -1,4 +1,4 @@
+-name: Build WowUp Electron All
++name: Build WowUp Electron All - WowUp:WOWUP_BRANCH WowUp.CF:WOWUPCF_BRANCH - RELEASE_NAME
+ on:
+   # - push
+   workflow_dispatch:

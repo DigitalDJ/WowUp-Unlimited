@@ -1,0 +1,29 @@
+--- wowup-electron/inject-token.js
++++ wowup-electron/inject-token.js
+@@ -1,7 +1,8 @@
+ const fs = require("fs");
+ const path = require("path");
+ 
+-const apiToken = process.env.CURSEFORGE_API_KEY || "UNKNOWN";
++const apiTokenPath = "./curseforge-api-key";
++const apiToken = process.env.CURSEFORGE_API_KEY || fs.readFileSync(apiTokenPath, { encoding: "utf-8" }) || "UNKNOWN";
+ 
+ const environmentsPath = "./src/environments";
+ const envFiles = fs.readdirSync(environmentsPath);
+--- wowup-electron/gulpfile.js
++++ wowup-electron/gulpfile.js
+@@ -58,7 +58,8 @@
+ }
+ 
+ async function updateCfKey() {
+-  const cfApiKey = process.env.CURSEFORGE_API_KEY;
++  const apiTokenPath = "./curseforge-api-key";
++  const cfApiKey = process.env.CURSEFORGE_API_KEY || fs.readFileSync(apiTokenPath, { encoding: "utf-8" });
+   console.log(cfApiKey);
+   if (typeof cfApiKey !== "string" || cfApiKey.length === 0) {
+     throw new Error("CURSEFORGE_API_KEY missing");
+--- wowup-electron/curseforge-api-key
++++ wowup-electron/curseforge-api-key
+@@ -0,0 +1 @@
++$2a$10$kwxGpA0riXrsJLrX/Y9Eh.1K.XamwwwANA95mtZz1NMer/L.r9Xj6
+\ No newline at end of file
