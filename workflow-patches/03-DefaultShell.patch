@@ -1,0 +1,12 @@
+--- .github/workflows/electron-all-build.yml
++++ .github/workflows/electron-all-build.yml
+@@ -3,6 +3,9 @@
+   # - push
+   workflow_dispatch:
+ 
++defaults:
++  run:
++    shell: bash
+ jobs:
+   # create-release:
+   #   name: Create Release
