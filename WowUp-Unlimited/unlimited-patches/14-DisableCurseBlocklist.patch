@@ -1,0 +1,15 @@
+--- wowup-electron/src/app/models/wowup-api/block-list.ts
++++ wowup-electron/src/app/models/wowup-api/block-list.ts
+@@ -6,6 +6,12 @@
+   authors: CurseAuthorBlockRepresentation[];
+ }
+ 
+ export interface BlockListRepresentation {
+   curse: CurseBlocksRepresentation;
+ }
++
++export const EmptyBlockList: BlockListRepresentation = {
++  curse: {
++    authors: [] as CurseAuthorBlockRepresentation[]
++  } as CurseBlocksRepresentation
++};

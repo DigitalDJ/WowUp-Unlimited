@@ -1,0 +1,184 @@
+--- wowup-electron/src/app/addon-providers/wago-addon-provider.ts
++++ wowup-electron/src/app/addon-providers/wago-addon-provider.ts
+@@ -163,12 +163,13 @@
+ const WAGO_AD_USER_AGENT =
+   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"; // the ad requires a normal looking user agent
+ const WAGO_AD_PRELOAD = "preload/wago.js";
+ const WAGO_SEARCH_CACHE_TIME_SEC = 60;
+ const WAGO_DETAILS_CACHE_TIME_SEC = 60;
+ const WAGO_FEATURED_ADDONS_CACHE_TIME_SEC = 60;
++const WAGO_RELOAD_PERIOD_SEC = 10 * 60;
+ 
+ export class WagoAddonProvider extends AddonProvider {
+   private readonly _circuitBreaker: CircuitBreakerWrapper;
+ 
+   private _apiTokenSrc = new BehaviorSubject<string>("");
+   private _wagoSecret = "";
+@@ -177,13 +178,13 @@
+   private _requestQueue: Map<string, Promise<any>> = new Map();
+ 
+   public readonly name = ADDON_PROVIDER_WAGO;
+   public readonly forceIgnore = false;
+   public enabled = true;
+   public authRequired = true;
+-  public adRequired = true;
++  public adRequired = false;
+   public allowEdit = true;
+   public allowReinstall = true;
+   public allowChannelChange = true;
+ 
+   public constructor(
+     private _electronService: ElectronService,
+@@ -200,12 +201,13 @@
+       `${this.name}_main`,
+       AppConfig.defaultHttpResetTimeoutMs,
+       AppConfig.wagoHttpTimeoutMs
+     );
+ 
+     this._electronService.on("wago-token-received", this.onWagoTokenReceived);
++    void this.getWagoToken();
+ 
+     // Watch for the change of the wago secret in the store
+     this._sensitiveStorageService.change$
+       .pipe(filter((change) => change.key == PREF_WAGO_ACCESS_KEY))
+       .subscribe((change) => {
+         console.log("[wago] wago secret set", change.value.length);
+@@ -728,12 +730,34 @@
+         return "wotlk";
+       default:
+         throw new Error(`[wago] Un-handled client type: ${clientType}`);
+     }
+   }
+ 
++  private getWagoToken = async () => {
++    const url = new URL(`${WAGO_AD_URL}`);
++    const response = await this._cachingService.transaction(
++      `${url.toString()}`,
++      () => this._circuitBreaker.getText(url, { "User-Agent": WAGO_AD_USER_AGENT }),
++      WAGO_FEATURED_ADDONS_CACHE_TIME_SEC
++    );
++
++    console.debug(`[wago] getWagoToken`, response);
++
++    if (response) {
++      const token = response.match(/provideApiKey\(atob\('(.*?)'/);
++      if (token && token.length > 1)
++      {
++        console.debug(`[wago] getWagoToken`, token[1]);
++        this.onWagoTokenReceived(null, Buffer.from(token[1], 'base64').toString());
++      }
++    }
++
++    setTimeout(() => { void this.getWagoToken() }, WAGO_RELOAD_PERIOD_SEC * 1000);
++  };
++
+   private onWagoTokenReceived = (evt, token: string) => {
+     console.log(`[wago] onWagoTokenReceived: ${token.length}`);
+     if (!this.isValidToken(token)) {
+       console.warn("[wagp] malformed token detected");
+       return;
+     }
+--- wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
++++ wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
+@@ -188,11 +205,9 @@
+     const wago = this._addonProviderService.getProvider(ADDON_PROVIDER_WAGO);
+     if (wago === undefined) {
+       console.warn("onWagoAccessTokenChange failed to find wago provider");
+       return;
+     }
+ 
+-    wago.adRequired = accessToken === undefined || accessToken.length <= 20;
+-
+     await this._addonProviderService.setProviderEnabled(ADDON_PROVIDER_WAGO, wago.enabled);
+   }
+ }
+--- wowup-electron/src/app/services/addons/addon.provider.factory.ts
++++ wowup-electron/src/app/services/addons/addon.provider.factory.ts
+@@ -15,13 +15,13 @@
+ import { FileService } from "../files/file.service";
+ import { TocService } from "../toc/toc.service";
+ import { WarcraftService } from "../warcraft/warcraft.service";
+ import { WowUpApiService } from "../wowup-api/wowup-api.service";
+ import { WagoAddonProvider } from "../../addon-providers/wago-addon-provider";
+ import { AddonProviderState } from "../../models/wowup/addon-provider-state";
+-import { ADDON_PROVIDER_UNKNOWN, PREF_WAGO_ACCESS_KEY, WAGO_PROMPT_KEY } from "../../../common/constants";
++import { ADDON_PROVIDER_UNKNOWN, WAGO_PROMPT_KEY } from "../../../common/constants";
+ import { Subject } from "rxjs";
+ import { PreferenceStorageService } from "../storage/preference-storage.service";
+ import { SensitiveStorageService } from "../storage/sensitive-storage.service";
+ import { UiMessageService } from "../ui-message/ui-message.service";
+ import { CurseAddonProvider } from "../../addon-providers/curse-addon-provider";
+ 
+@@ -58,13 +58,13 @@
+     const providers: AddonProvider[] = [
+       this.createZipAddonProvider(),
+       this.createRaiderIoAddonProvider(),
+       this.createWowUpCompanionAddonProvider(),
+       this.createWowUpAddonProvider(),
+       this.createCurseProvider(),
+-      await this.createWagoAddonProvider(),
++      this.createWagoAddonProvider(),
+       this.createTukUiAddonProvider(),
+       this.createWowInterfaceAddonProvider(),
+       this.createGitHubAddonProvider(),
+     ];
+ 
+     for (const provider of providers) {
+@@ -98,27 +98,22 @@
+     });
+ 
+     provider.enabled = enabled;
+     this._addonProviderChangeSrc.next(provider);
+   }
+ 
+-  public async createWagoAddonProvider(): Promise<WagoAddonProvider> {
+-    const wago = new WagoAddonProvider(
++  public createWagoAddonProvider(): WagoAddonProvider {
++    return new WagoAddonProvider(
+       this._electronService,
+       this._cachingService,
+       this._warcraftService,
+       this._tocService,
+       this._uiMessageService,
+       this._sensitiveStorageService,
+       this._networkService
+     );
+-
+-    const storedWagoKey = await this._sensitiveStorageService.getAsync(PREF_WAGO_ACCESS_KEY);
+-    wago.adRequired = storedWagoKey === undefined || storedWagoKey.length === 0;
+-
+-    return wago;
+   }
+ 
+   public createWowUpCompanionAddonProvider(): WowUpCompanionAddonProvider {
+     return new WowUpCompanionAddonProvider(this._fileService, this._tocService);
+   }
+ 
+--- wowup-electron/src/app/services/network/network.service.ts
++++ wowup-electron/src/app/services/network/network.service.ts
+@@ -77,17 +77,23 @@
+           .get<T>(url.toString(), { headers: { ...CACHE_CONTROL_HEADERS, ...headers } })
+           .pipe(first(), timeout(timeoutMs ?? this._defaultTimeoutMs))
+       )
+     );
+   }
+ 
+-  public getText(url: URL | string, timeoutMs?: number): Promise<string> {
++  public getText(
++    url: URL | string,
++    headers: {
++      [header: string]: string | string[];
++    } = {},
++    timeoutMs?: number
++  ): Promise<string> {
+     return this.fire(() =>
+       firstValueFrom(
+         this._httpClient
+-          .get(url.toString(), { responseType: "text", headers: { ...CACHE_CONTROL_HEADERS } })
++          .get(url.toString(), { responseType: "text", headers: { ...CACHE_CONTROL_HEADERS, ...headers } })
+           .pipe(first(), timeout(timeoutMs ?? this._defaultTimeoutMs))
+       )
+     );
+   }
+ 
+   public postJson<T>(

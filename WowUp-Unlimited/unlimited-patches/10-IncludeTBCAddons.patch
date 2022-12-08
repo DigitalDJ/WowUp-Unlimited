@@ -1,0 +1,59 @@
+--- wowup-electron/src/app/addon-providers/curse-addon-provider.ts
++++ wowup-electron/src/app/addon-providers/curse-addon-provider.ts
+@@ -46,23 +46,23 @@
+ const CHANGELOG_CACHE_TTL_SEC = 30 * 60;
+ const FEATURED_ADDONS_CACHE_TTL_SEC = AppConfig.featuredAddonsCacheTimeSec;
+ 
+ const GAME_TYPE_LISTS = [
+   {
+     flavor: "wow_classic",
+-    typeId: 67408,
++    typeId: [67408],
+     matches: [WowClientType.ClassicEra, WowClientType.ClassicEraPtr],
+   },
+   {
+     flavor: "wow-wrath-classic",
+-    typeId: 73713,
++    typeId: [73713, 73246],
+     matches: [WowClientType.Classic, WowClientType.ClassicPtr, WowClientType.ClassicBeta],
+   },
+   {
+     flavor: "wow_retail",
+-    typeId: 517,
++    typeId: [517],
+     matches: [WowClientType.Retail, WowClientType.RetailPtr, WowClientType.Beta],
+   },
+ ];
+ 
+ export class CurseAddonProvider extends AddonProvider {
+   private readonly _circuitBreaker: CircuitBreakerWrapper;
+@@ -452,13 +458,13 @@
+   private getGameVersionTypeId(clientType: WowClientType): number {
+     const gameType = GAME_TYPE_LISTS.find((gtl) => gtl.matches.includes(clientType));
+     if (!gameType) {
+       throw new Error(`Game type not found: ${clientType}`);
+     }
+ 
+-    return gameType.typeId;
++    return gameType.typeId[0];
+   }
+ 
+   private hasSortableGameVersion(file: cfv2.CF2File, typeId: number): boolean {
+     if (!file.sortableGameVersions) {
+       console.debug("sortableGameVersions missing", file);
+     }
+@@ -764,13 +770,13 @@
+     }
+   }
+ 
+   private getValidClientTypes(file: cfv2.CF2File): WowClientType[] {
+     const gameVersions: WowClientType[] = _.flatten(
+       GAME_TYPE_LISTS.filter((type) =>
+-        file.sortableGameVersions.find((sgv) => sgv.gameVersionTypeId === type.typeId)
++        file.sortableGameVersions.find((sgv) => type.typeId.includes(sgv.gameVersionTypeId))
+       ).map((game) => game.matches)
+     );
+ 
+     return _.uniq(gameVersions);
+   }
+ 
