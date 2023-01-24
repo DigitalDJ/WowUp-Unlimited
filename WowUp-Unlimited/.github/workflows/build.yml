@@ -1,0 +1,69 @@
+name: Build WowUp Unlimited
+on:
+  workflow_dispatch:
+    inputs:
+      wowup_branch:
+        description: 'WowUp Branch'
+        default: 'master'
+        required: true
+      wowupcf_branch:
+        description: 'WowUp.CF Branch'
+        default: 'main'
+        required: true
+      release_name:
+        description: 'WowUp Unlimited Release'
+        default: 'vX.X.X'
+        required: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Initialize git config
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email noreply@github.com
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+      - name: Checkout WowUp-Unlimited (orphaned)
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.WORKFLOW_PAT }}
+      - name: Checkout WowUp-Unlimited
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          path: 'WowUp-Unlimited'
+      - name: Checkout WowUp
+        uses: actions/checkout@v3
+        with:
+          repository: 'WowUp/WowUp'
+          ref: ${{ inputs.wowup_branch }}
+          path: 'WowUp'
+          fetch-depth: 0
+      - name: Create Release Branch
+        run: git switch --orphan "${{ inputs.release_name }}-Src"
+      - name: Patch WowUp Workflow
+        run: |
+          mkdir -p .github/workflows
+          cp WowUp/.github/workflows/electron-all-build.yml .github/workflows
+          
+          patch -p0 < ./WowUp-Unlimited/workflow-patches/01-WorkflowCheckouts.patch
+          patch -p0 < ./WowUp-Unlimited/workflow-patches/02-CurseForgeMerge.patch
+          patch -p0 < ./WowUp-Unlimited/workflow-patches/03-DefaultShell.patch
+          patch -p0 < ./WowUp-Unlimited/workflow-patches/04-Trigger.patch
+          patch -p0 < ./WowUp-Unlimited/workflow-patches/05-Env.patch
+          patch -p0 < ./WowUp-Unlimited/workflow-patches/06-WorkspaceLocation.patch
+          patch -p0 < ./WowUp-Unlimited/workflow-patches/07-RunMerge.patch
+          patch -p0 < ./WowUp-Unlimited/workflow-patches/08-DisableCodeSigning.patch
+          patch -p0 < ./WowUp-Unlimited/workflow-patches/09-WorkflowName.patch
+          
+          sed -i "s/WOWUP_BRANCH/${{ inputs.wowup_branch }}/g" .github/workflows/electron-all-build.yml
+          sed -i "s/WOWUPCF_BRANCH/${{ inputs.wowupcf_branch }}/g" .github/workflows/electron-all-build.yml
+          sed -i "s/RELEASE_NAME/${{ inputs.release_name }}/g" .github/workflows/electron-all-build.yml
+          
+          git add .github/workflows/electron-all-build.yml
+          git commit -m "Patched WowUp Build Workflow: WowUp ${{ inputs.wowup_branch }} WowUp.CF ${{ inputs.wowupcf_branch }}"
+          git push --force origin "${{ inputs.release_name }}-Src"
