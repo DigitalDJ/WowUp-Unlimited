@@ -1,0 +1,17 @@
+﻿--- wowup-electron/package.json
++++ wowup-electron/package.json
+@@ -7,13 +7,13 @@
+     "wow",
+     "world of warcraft"
+   ],
+   "homepage": "https://wowup.io",
+   "repository": {
+     "type": "git",
+-    "url": "https://github.com/WowUp/WowUp.git"
++    "url": "https://github.com/DigitalDJ/WowUp-Unlimited.git"
+   },
+   "author": {
+     "name": "Jliddev",
+     "email": "jliddev@gmail.com"
+   },
+   "main": "app/main.js",

@@ -1,0 +1,32 @@
+--- .github/workflows/electron-all-build.yml
++++ .github/workflows/electron-all-build.yml
+@@ -33,6 +33,29 @@
+         with:
+           fetch-depth: 0
+ 
++      - name: Install GNU patch
++        if: matrix.os == 'macos-11'
++        run: brew install gpatch
++
++      - name: WowUp Unlimited Merge
++        run: WowUp-Unlimited/merge.sh
++        
++      - name: Commit WowUp Unlimited Patched Source
++        if: matrix.os == 'ubuntu-latest'
++        run: |
++          cd ./WowUp-Unlimited-Src
++          cp -af ../WowUp WowUp
++          cp -af ../WowUp-Unlimited WowUp-Unlimited
++          cp -af .github/workflows/electron-all-build.yml WowUp/.github/workflows/electron-all-build.yml
++          rm -rf WowUp/.git
++          rm -rf WowUp-Unlimited/.git
++          git add WowUp WowUp-Unlimited
++          git commit -a -m "WowUp-Unlimited ${{ env.release_name }}"
++          git tag -d "${{ env.release_name }}" || true
++          git tag "${{ env.release_name }}"
++          git push --force origin "${{ env.release_name }}-Src"
++          git push --tags --force origin "${{ env.release_name }}"
++
+       - name: Use Node.js ${{ matrix.node-version }}
+         uses: actions/setup-node@v2
+         with:

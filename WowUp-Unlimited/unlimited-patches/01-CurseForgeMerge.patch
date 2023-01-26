@@ -1,0 +1,2400 @@
+﻿--- wowup-electron/src/environments/environment.ts
++++ wowup-electron/src/environments/environment.ts
+@@ -13,16 +13,17 @@
+   wago: {
+     termsUrl: "https://addons.wago.io/agreements/terms-of-service",
+     dataConsentUrl: "https://addons.wago.io/agreements/wowup-data-consent",
+   },
+   curseforge: {
+     httpTimeoutMs: 60000,
++    apiKey: "{{CURSEFORGE_API_KEY}}",
+   },
+   autoUpdateIntervalMs: 3600000, // 1 hour
+   appUpdateIntervalMs: 3600000, // 1 hour
+   defaultHttpTimeoutMs: 10000,
+   defaultHttpResetTimeoutMs: 30000,
+   wowUpHubHttpTimeoutMs: 10000,
+   wagoHttpTimeoutMs: 10000,
+   newsRefreshIntervalMs: 3600000, // 1 hour
+   featuredAddonsCacheTimeSec: 30, // 30 sec
+ };
+--- wowup-electron/src/environments/environment.prod.ts
++++ wowup-electron/src/environments/environment.prod.ts
+@@ -13,16 +13,17 @@
+   wago: {
+     termsUrl: "https://addons.wago.io/agreements/terms-of-service",
+     dataConsentUrl: "https://addons.wago.io/agreements/wowup-data-consent",
+   },
+   curseforge: {
+     httpTimeoutMs: 60000,
++    apiKey: "{{CURSEFORGE_API_KEY}}",
+   },
+   autoUpdateIntervalMs: 3600000, // 1 hour
+   appUpdateIntervalMs: 3600000, // 1 hour
+   defaultHttpTimeoutMs: 10000,
+   defaultHttpResetTimeoutMs: 30000,
+   wowUpHubHttpTimeoutMs: 10000,
+   wagoHttpTimeoutMs: 10000,
+   newsRefreshIntervalMs: 3600000, // 1 hour
+   featuredAddonsCacheTimeSec: 30, // 30 sec
+ };
+--- wowup-electron/src/environments/environment.dev.ts
++++ wowup-electron/src/environments/environment.dev.ts
+@@ -18,16 +18,17 @@
+   wago: {
+     termsUrl: "https://addons.wago.io/agreements/terms-of-service",
+     dataConsentUrl: "https://addons.wago.io/agreements/wowup-data-consent",
+   },
+   curseforge: {
+     httpTimeoutMs: 60000,
++    apiKey: "{{CURSEFORGE_API_KEY}}",
+   },
+   autoUpdateIntervalMs: 3600000, // 1 hour
+   appUpdateIntervalMs: 3600000, // 1 hour
+   defaultHttpTimeoutMs: 10000,
+   defaultHttpResetTimeoutMs: 30000,
+   wowUpHubHttpTimeoutMs: 10000,
+   wagoHttpTimeoutMs: 10000,
+   newsRefreshIntervalMs: 3600000, // 1 hour
+   featuredAddonsCacheTimeSec: 30, // 30 sec
+ };
+--- wowup-electron/src/common/wowup.d.ts
++++ wowup-electron/src/common/wowup.d.ts
+@@ -36,12 +36,13 @@
+   | "clipboard-read-text"
+   | "close-window"
+   | "copy-file"
+   | "create-app-menu"
+   | "create-directory"
+   | "create-tray-menu"
++  | "curse-get-scan-results"
+   | "decode-product-db"
+   | "delete-directory"
+   | "focus-window"
+   | "get-app-version"
+   | "get-asset-file-path"
+   | "get-directory-tree"
+@@ -59,12 +60,14 @@
+   | "list-directories"
+   | "list-disks-win32"
+   | "list-entries"
+   | "list-files"
+   | "maximize-window"
+   | "minimize-window"
++  | "ow-is-cmp-required"
++  | "ow-open-cmp"
+   | "path-exists"
+   | "push-init"
+   | "push-register"
+   | "push-subscribe"
+   | "push-unregister"
+   | "quit-app"
+--- wowup-electron/src/common/constants.ts
++++ wowup-electron/src/common/constants.ts
+@@ -14,19 +14,21 @@
+ export const ADDON_PROVIDER_HUB = "WowUpHub";
+ export const ADDON_PROVIDER_WAGO = "Wago";
+ export const ADDON_PROVIDER_WOWUP_COMPANION = "WowUpCompanion";
+ export const ADDON_PROVIDER_ZIP = "Zip";
+ 
+ export const APP_PROTOCOL_NAME = "wowup";
++export const CURSE_PROTOCOL_NAME = "curseforge";
+ 
+ // WOWUP ADDON
+ export const WOWUP_ADDON_FOLDER_NAME = "WowUp";
+ export const WOWUP_DATA_ADDON_FOLDER_NAME = "wowup_data_addon";
+ export const WOWUP_ASSET_FOLDER_NAME = "WowUpAddon";
+ 
+ // IPC CHANNELS
++export const IPC_CURSE_GET_SCAN_RESULTS = "curse-get-scan-results";
+ export const IPC_DOWNLOAD_FILE_CHANNEL = "download-file";
+ export const IPC_COPY_DIRECTORY_CHANNEL = "copy-directory";
+ export const IPC_CREATE_DIRECTORY_CHANNEL = "create-directory";
+ export const IPC_DELETE_DIRECTORY_CHANNEL = "delete-directory";
+ export const IPC_STAT_DIRECTORY_CHANNEL = "stat-directory";
+ export const IPC_LIST_DIRECTORIES_CHANNEL = "list-directories";
+@@ -42,12 +44,14 @@
+ export const IPC_WOWUP_GET_SCAN_RESULTS = "wowup-get-scan-results";
+ export const IPC_GET_HOME_DIR = "get-home-dir";
+ export const IPC_GET_ASSET_FILE_PATH = "get-asset-file-path";
+ export const IPC_CREATE_TRAY_MENU_CHANNEL = "create-tray-menu";
+ export const IPC_LIST_DISKS_WIN32 = "list-disks-win32";
+ export const IPC_CREATE_APP_MENU_CHANNEL = "create-app-menu";
++export const IPC_OW_IS_CMP_REQUIRED = "ow-is-cmp-required";
++export const IPC_OW_OPEN_CMP = "ow-open-cmp";
+ export const IPC_MENU_ZOOM_OUT_CHANNEL = "menu-zoom-out";
+ export const IPC_MENU_ZOOM_IN_CHANNEL = "menu-zoom-in";
+ export const IPC_MENU_ZOOM_RESET_CHANNEL = "menu-zoom-reset";
+ export const IPC_MAXIMIZE_WINDOW = "maximize-window";
+ export const IPC_WINDOW_IS_MAXIMIZED = "window-is-maximized";
+ export const IPC_MINIMIZE_WINDOW = "minimize-window";
+--- wowup-electron/src/assets/i18n/zh-TW.json
++++ wowup-electron/src/assets/i18n/zh-TW.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "重置",
+     "VERSION_MISMATCH": "版本號不匹配"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "為什麼會看見廣告？",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "顯示此廣告是為了支援 <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> 上辛勤工作、開發出優秀插件的作者們。如果不想看到此廣告，可以在「選項」中禁用 Wago.io 安裝源。",
++      "MESSAGE": "顯示此廣告是為了支援 <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> 上辛勤工作、開發出優秀插件的作者們。如果不想看到此廣告，可以在「選項」中禁用 Wago.io / CurseForge 安裝源。",
+       "TITLE": "為什麼會看見廣告？"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "從 URL 安裝"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "更新記錄 {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "ad vendors",
++        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
++        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
++        "MANAGE_BUTTON": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "在開始使用 WowUp 之前，請設定此應用程式的許可權。",
+       "POSITIVE_BUTTON": "確認",
+       "TELEMETRY": {
+         "DESCRIPTION": "是否傳送匿名的插件統計資料和錯誤報告以幫助改進 WowUp？",
+         "TOGGLE_LABEL": "允許遙測"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "設定應用程式更新通道",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "我明白了",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "切換此應用程式的穩定版和 Beta 通道",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "更新通道",
+         "APP_RELEASE_CHANNEL_LABEL": "應用程式更新通道",
+         "CURRENT_LANGUAGE_LABEL": "當前語言",
++        "CURSE_PROTOCOL_DESCRIPTION": "從 CurseForge 網站下載插件時，WowUp 將會接管安裝過程",
++        "CURSE_PROTOCOL_LABEL": "接管 CurseForge 下載連結",
+         "ENABLE_APP_BADGE_DESCRIPTION": "在應用程式圖示上用角標顯示可更新的插件數量。",
+         "ENABLE_APP_BADGE_LABEL": "啟用數字角標通知",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "啟用各種系統通知彈窗，如自動更新插件通知。",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "啟用系統通知",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "開啟插件詳情頁時，自動切換到上一次開啟的選項卡",
+         "KEEP_LAST_OPENED_TAB_LABEL": "記住上一次開啟的選項卡",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "啟用硬體加速",
+         "USE_SYMLINK_SUPPORT": "啟用符號連結",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "啟用符號連結使得 WowUp 在重新掃描時識別符號連結。警告：如果您不知道什麼是符號連結，請禁用此項。在當前版本中，符號連結將會在更新插件時被刪除，並被替換為真正的資料夾。",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "啟用符號連結？",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "允許 WowUp 掃描插件所在路徑下的符號連結。警告：符號連結在安裝或更新插件時會被替換。"
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
++        "ADS_OPTION_LABEL": "Ads Personalization & Data",
++        "ADS_OPTION_MANAGE": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "顯示配置檔案",
+         "CONFIG_FILES_DESCRIPTION": "開啟儲存 addons.json、preferences.json 等配置檔案的資料夾。",
+         "CONFIG_FILES_LABEL": "配置檔案",
+         "DEBUG_DATA_BUTTON": "轉儲除錯資料",
+         "DEBUG_DATA_DESCRIPTION": "記錄除錯資料以幫助診斷潛在的問題。除錯資料可以在最新的日誌檔案中找到。",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "關於",
+         "ADDONS": "插件",
+         "APPLICATION": "應用程式",
+         "CLIENTS": "客戶端",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "除錯"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "新增",
+         "AUTO_UPDATE_DESCRIPTION": "新安裝的插件將預設設定為自動更新",
+         "AUTO_UPDATE_LABEL": "自動更新",
+--- wowup-electron/src/assets/i18n/zh.json
++++ wowup-electron/src/assets/i18n/zh.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "重置",
+     "VERSION_MISMATCH": "版本号不匹配"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "为什么会看见广告？",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "显示此广告是为了支持 <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> 上辛勤工作、开发出优秀插件的作者们。如果不想看到此广告，可以在 “选项” 中禁用 Wago.io 安装源。",
++      "MESSAGE": "显示此广告是为了支持 <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> 上辛勤工作、开发出优秀插件的作者们。如果不想看到此广告，可以在 “选项” 中禁用 Wago.io / CurseForge 安装源。",
+       "TITLE": "为什么会看见广告？"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "从 URL 安装"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "更新记录 {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "ad vendors",
++        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
++        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
++        "MANAGE_BUTTON": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "在开始使用 WowUp 之前，请设置此应用程序的权限。",
+       "POSITIVE_BUTTON": "确认",
+       "TELEMETRY": {
+         "DESCRIPTION": "是否发送匿名的插件统计数据和错误报告以帮助改进 WowUp？",
+         "TOGGLE_LABEL": "允许遥测"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "设置应用程序更新通道",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "我明白了",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "切换此应用程序的稳定版和 Beta 通道",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "更新通道",
+         "APP_RELEASE_CHANNEL_LABEL": "应用程序更新通道",
+         "CURRENT_LANGUAGE_LABEL": "当前语言",
++        "CURSE_PROTOCOL_DESCRIPTION": "从 CurseForge 网站下载插件时，WowUp 将会接管安装过程",
++        "CURSE_PROTOCOL_LABEL": "接管 CurseForge 下载链接",
+         "ENABLE_APP_BADGE_DESCRIPTION": "在应用程序图标上用角标显示可更新的插件数量。",
+         "ENABLE_APP_BADGE_LABEL": "启用数字角标通知",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "启用各种系统通知弹窗，如自动更新插件通知。",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "启用系统通知",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "打开插件详情页时，自动切换到上一次打开的选项卡",
+         "KEEP_LAST_OPENED_TAB_LABEL": "记住上一次打开的选项卡",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "启用硬件加速",
+         "USE_SYMLINK_SUPPORT": "启用符号链接",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "启用符号链接使得 WowUp 在重新扫描时识别符号链接。警告：如果您不知道什么是符号链接，请禁用此项。在当前版本中，符号链接将会在更新插件时被删除，并被替换为真正的文件夹。",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "启用符号链接？",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "允许 WowUp 扫描插件所在路径下的符号链接。警告：符号链接在安装或更新插件时会被替换。"
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
++        "ADS_OPTION_LABEL": "Ads Personalization & Data",
++        "ADS_OPTION_MANAGE": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "显示配置文件",
+         "CONFIG_FILES_DESCRIPTION": "打开存储 addons.json、preferences.json 等配置文件的文件夹。",
+         "CONFIG_FILES_LABEL": "配置文件",
+         "DEBUG_DATA_BUTTON": "转储调试数据",
+         "DEBUG_DATA_DESCRIPTION": "记录调试数据以帮助诊断潜在的问题。调试数据可以在最新的日志文件中找到。",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "关于",
+         "ADDONS": "插件",
+         "APPLICATION": "应用程序",
+         "CLIENTS": "客户端",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "调试"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "新增",
+         "AUTO_UPDATE_DESCRIPTION": "新安装的插件将默认设置为自动更新",
+         "AUTO_UPDATE_LABEL": "自动更新",
+--- wowup-electron/src/assets/i18n/ru.json
++++ wowup-electron/src/assets/i18n/ru.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "Очистить",
+     "VERSION_MISMATCH": "Не совпадают версии"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "Почему я вижу эту рекламу?",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "Чтобы использовать <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> в виде источника модификаций и для поддержки их авторов за тяжёлый труд над Вашими любимыми модификациями, мы должны показывать эту рекламу.\n\nЕсли Вы не хотите видеть эту рекламу, то всегда можете отключить wago.io как источник модификаций во вкладке настроек.",
++      "MESSAGE": "Чтобы использовать <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> в виде источника модификаций и для поддержки их авторов за тяжёлый труд над Вашими любимыми модификациями, мы должны показывать эту рекламу.\n\nЕсли Вы не хотите видеть эту рекламу, то всегда можете отключить wago.io / CurseForge как источник модификаций во вкладке настроек.",
+       "TITLE": "Почему я вижу эту рекламу?"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "Ссылка на установку модификации"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "Список изменений в версии {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "поставщики рекламы",
++        "DESCRIPTION_BOTTOM": ". Нажмите на кнопку 'Управление', чтобы контролировать свои согласия или возражать против обработки Ваших данных. Вы можете изменить свои предпочтения в любое время через экран настроек.",
++        "DESCRIPTION_TOP": " Для того, чтобы использовать интеграцию этого приложения с CurseForge, они требуют, чтобы Вы разрешили им показывать Вам рекламу от одного из своих приложений ",
++        "MANAGE_BUTTON": "Управление",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "Прежде чем мы начнем, нам нужно настроить несколько разрешений для приложения.",
+       "POSITIVE_BUTTON": "Подтвердить",
+       "TELEMETRY": {
+         "DESCRIPTION": "Хотите помочь улучшить WowUp, анонимно отправляя данные об установке и ошибках?",
+         "TOGGLE_LABEL": "Разрешить телеметрию"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Установка канала выпуска приложения",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "Да, я понимаю",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "Переключение между бета-версией и стабильной версией приложения",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Канал",
+         "APP_RELEASE_CHANNEL_LABEL": "Канал выпуска приложения",
+         "CURRENT_LANGUAGE_LABEL": "Текущий язык",
++        "CURSE_PROTOCOL_DESCRIPTION": "При загрузке модификаций с сайта CurseForge, WowUp будет брать установку на себя.",
++        "CURSE_PROTOCOL_LABEL": "Обрабатывать ссылки на установку с CurseForge",
+         "ENABLE_APP_BADGE_DESCRIPTION": "Показывать количество доступных обновлений на значке приложения.",
+         "ENABLE_APP_BADGE_LABEL": "Включить уведомления на значке приложения",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Включить различные окна системных уведомлений, такие как автоматически обновлённые модификации.",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "Включить системные уведомления",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "При открытии страницы сведений о модификации автоматически выбирает последнюю открытую вкладку.",
+         "KEEP_LAST_OPENED_TAB_LABEL": "Сохранять последнюю открытую вкладку",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "Включить аппаратное ускорение",
+         "USE_SYMLINK_SUPPORT": "Включить поддержку символических ссылок",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "Включение поддержки символических ссылок позволит WowUp распознавать их при повторном сканировании. Предупреждение: Если Вы не знаете, что такое символическая ссылка, то, скорее всего, Вам это не нужно. При обновлении символические ссылки в настоящее время будут заменены фактической папкой, и ссылка будет потеряна.",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "Включить поддержку символических ссылок?",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Разрешает WowUp сканировать папки символических ссылок в папке Вашей модификации. Предупреждение: они будут заменены при обновлении/установке."
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "Просмотр и управление тем, как рекламодатели CurseForge могут использовать Ваши данные для персонализации рекламы",
++        "ADS_OPTION_LABEL": "Персонализация рекламы и данные",
++        "ADS_OPTION_MANAGE": "Управление",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "Показать файлы настроек",
+         "CONFIG_FILES_DESCRIPTION": "Открыть папку, в которой хранятся Ваши файлы addons.json и preferences.json.",
+         "CONFIG_FILES_LABEL": "Файлы настроек",
+         "DEBUG_DATA_BUTTON": "Дамп отладочных данных",
+         "DEBUG_DATA_DESCRIPTION": "Записывать отладочные данные, чтобы помочь в диагностике потенциальных проблем. Его можно найти в последнем лог-файле, если необходимо.",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "О приложении",
+         "ADDONS": "Модификации",
+         "APPLICATION": "Приложение",
+         "CLIENTS": "Клиенты",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "Отладка"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "Добавить новый",
+         "AUTO_UPDATE_DESCRIPTION": "Новые установленные модификации будут автоматически обновляться по умолчанию",
+         "AUTO_UPDATE_LABEL": "Автообновление",
+--- wowup-electron/src/assets/i18n/pt.json
++++ wowup-electron/src/assets/i18n/pt.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "Redefinir",
+     "VERSION_MISMATCH": "Versões não correspondem"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "Por que estou vendo este anúncio?",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "Para poder usar <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> como provedor de addon e apoiar seus autores pelo trabalho duro em seus addons favoritos nós precisamos mostrar este anúncio.\n\nSe você não quer mais ver esse anúncio, você pode sempre desabilitar wago.io como provedor na guia de opções.",
++      "MESSAGE": "Para poder usar <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> como provedor de addon e apoiar seus autores pelo trabalho duro em seus addons favoritos nós precisamos mostrar este anúncio.\n\nSe você não quer mais ver esse anúncio, você pode sempre desabilitar wago.io / CurseForge como provedor na guia de opções.",
+       "TITLE": "Por que estou vendo este anúncio?"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "Instalar Addon pela URL"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "Notas do Patch {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "ad vendors",
++        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
++        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
++        "MANAGE_BUTTON": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "Antes de começarmos nós precisamos configurar algumas permissões para o app.",
+       "POSITIVE_BUTTON": "Confirmar",
+       "TELEMETRY": {
+         "DESCRIPTION": "Ajudar a melhorar o WowUp enviando dados e/ou erros anônimos de instalação do app?",
+         "TOGGLE_LABEL": "Permitir Telemetria"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Configurar canal de release do app",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "Sim, eu entendo",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "Alternar entre releases Beta e Estável para a aplicação",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Canal",
+         "APP_RELEASE_CHANNEL_LABEL": "Canal de release da aplicação",
+         "CURRENT_LANGUAGE_LABEL": "Idioma Atual",
++        "CURSE_PROTOCOL_DESCRIPTION": "Quando baixando addons do site CurseForge, WowUp ira cuidar da instalação",
++        "CURSE_PROTOCOL_LABEL": "Gerenciar links de download CurseForge",
+         "ENABLE_APP_BADGE_DESCRIPTION": "Mostrar um selo no icone da aplicação com o número de atualizações de addon disponíveis.",
+         "ENABLE_APP_BADGE_LABEL": "Habilitar selo de notificação do app",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Habilitar várias notificações e popups do sistema, como os de aviso de Addons atualizados automaticamente.",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "Habilitar notificações do sistema",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "When opening an addon detail page, automatically select the last opened tab",
+         "KEEP_LAST_OPENED_TAB_LABEL": "Keep last opened tab",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "Habilitar Aceleração de Hardware",
+         "USE_SYMLINK_SUPPORT": "Habilitar suporte a Symlink",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "Habilitando o suporte à symlink irá permitir ao WowUp reconhecer symlinks quando fazer um re-escaneamento. Aviso: Se você não sabe o que é um symlink, você não precisa disso. Quando atualizar os symlinks serão atualmente substituídos com uma pasta e o link será perdido.",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "Habilitar suporte a symlink?",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Permitir ao WowUp escanear pastas symlink na sua pasta de Addons. Aviso: elas serão substituidas quando atualizar/instalar."
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
++        "ADS_OPTION_LABEL": "Ads Personalization & Data",
++        "ADS_OPTION_MANAGE": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "Show Config Files",
+         "CONFIG_FILES_DESCRIPTION": "Open the folder where for example your addons.json and preferences.json are stored.",
+         "CONFIG_FILES_LABEL": "Config Files",
+         "DEBUG_DATA_BUTTON": "Esvaziar log de depuração de dados",
+         "DEBUG_DATA_DESCRIPTION": "Registra os dados de depuração e ajuda a diagnosticar problemas potenciais. Apenas por o curiosidade, isso pode ser encontrado em seu último arquivo de registro.",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "Sobre",
+         "ADDONS": "Addons",
+         "APPLICATION": "Aplicação",
+         "CLIENTS": "Clientes",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "Debug"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "Adicionar Novo",
+         "AUTO_UPDATE_DESCRIPTION": "Addons recém-instalados serão definidos para atualizar automáticamente por padrão",
+         "AUTO_UPDATE_LABEL": "Atualização Automática",
+--- wowup-electron/src/assets/i18n/pl.json
++++ wowup-electron/src/assets/i18n/pl.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "Reset",
+     "VERSION_MISMATCH": "Ten addon jest już zainstalowany, ale wersja nie zgadza się"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "Czemu widzę tę reklamę?",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "Aby używać <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> jako dostawcę addonu i pomagać autorom za ich ciężką pracę nad twoimi ulubionimi addonami, jesteśmy zmuszeni pokazywać tę reklamę.\n\nJeśli nie chcesz widzieć tej reklamy, zawsze możesz zablokować Wago jako dostawcę w zakładce opcje.",
++      "MESSAGE": "Aby używać <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> jako dostawcę addonu i pomagać autorom za ich ciężką pracę nad twoimi ulubionimi addonami, jesteśmy zmuszeni pokazywać tę reklamę.\n\nJeśli nie chcesz widzieć tej reklamy, zawsze możesz zablokować Wago / CurseForge jako dostawcę w zakładce opcje.",
+       "TITLE": "Czemu widzę tę reklamę?"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "Zainstaluj addon z URL"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "Opis łatki {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "ad vendors",
++        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
++        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
++        "MANAGE_BUTTON": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "Przed rozpoczęciem potrzebujemy ustawić klika uprawień dla aplikacji.",
+       "POSITIVE_BUTTON": "Potwierdź",
+       "TELEMETRY": {
+         "DESCRIPTION": "Pomóż ulepszyć WowUp poprzez wysyłanie anonimowych danych o instalacji aplikacji lub o ich błędach.",
+         "TOGGLE_LABEL": "Zezwalaj na telemetrię"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Ustawianie kanału wydania aplikacji",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "Tak, rozumiem.",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "Przełączanie pomiędzy wersjami Beta i Stabilną aplikacji",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Kanał",
+         "APP_RELEASE_CHANNEL_LABEL": "Kanał udostępniania aplikacji",
+         "CURRENT_LANGUAGE_LABEL": "Aktualny język",
++        "CURSE_PROTOCOL_DESCRIPTION": "Podczas pobierania dodatków ze strony CurseForge, WowUp zajmie się instalacją",
++        "CURSE_PROTOCOL_LABEL": "Obsługa pobranych linków CurseForge",
+         "ENABLE_APP_BADGE_DESCRIPTION": "Pokaż plakietkę na ikonie aplikacji z liczbą dodatków z dostępnymi aktualizacjami.",
+         "ENABLE_APP_BADGE_LABEL": "Włącz powiadamianie o odznakach aplikacji",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Włącz różne wyskakujące okienka powiadomień, np. o automatycznie aktualizowanych addonach.",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "Włącz powiadomienia systemowe",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "Podczas otwierania strony szczegółów addonu, automatycznie wybieraj ostatnio otwartą kartę",
+         "KEEP_LAST_OPENED_TAB_LABEL": "Zachowaj ostatnio otwartą kartę",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "Włącz akcelerację sprzętową",
+         "USE_SYMLINK_SUPPORT": "Włącz obsługę Symlink",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "Włączenie obsługi symlink pozwoli WowUp na rozpoznawanie symlinków podczas ponownego skanowania. Ostrzeżenie: Jeśli nie wiesz, co to jest symlink, nie potrzebujesz tego. Podczas aktualizacji symlink będzie obecnie zastępowany rzeczywistym folderem, a link zostanie utracony.",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "Włączyć obsługę symlink?",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Pozwól WowUp na skanowanie folderów z symlinkami w folderze addonów. Ostrzeżenie: zostaną one zastąpione podczas aktualizacji/instalacji."
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
++        "ADS_OPTION_LABEL": "Ads Personalization & Data",
++        "ADS_OPTION_MANAGE": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "Pokaż pliki konfiguracyjne",
+         "CONFIG_FILES_DESCRIPTION": "Otwórz folder, w którym przechowywane są na przykład pliki addons.json oraz preferences.json.",
+         "CONFIG_FILES_LABEL": "Pliki konfiguracyjne",
+         "DEBUG_DATA_BUTTON": "Zrzut danych debugowania",
+         "DEBUG_DATA_DESCRIPTION": "Rejestruj dane debugowania, aby pomóc w diagnozowaniu potencjalnych problemów. Można je znaleźć w najnowszym pliku dziennika dla ciekawskich.",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "Informacje",
+         "ADDONS": "Addony",
+         "APPLICATION": "Aplikacja",
+         "CLIENTS": "Klienty",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "Debugowanie"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "Dodaj nowy",
+         "AUTO_UPDATE_DESCRIPTION": "Wszystkie istniejące i nowo zainstalowane addony będą domyślnie ustawione na automatyczną aktualizację.",
+         "AUTO_UPDATE_LABEL": "Automatyczna aktualizacja",
+--- wowup-electron/src/assets/i18n/nb.json
++++ wowup-electron/src/assets/i18n/nb.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "Tilbakestill",
+     "VERSION_MISMATCH": "Versjonene samsvarer ikke"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "Hvorfor ser jeg denne annonsen?",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "For å kunne bruke <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> som leverandør av utvidelser, og støtte forfatterene deres for deres harde arbeid med favorittutvidelsene dine, er vi nødt til å vise denne annonsen.\n\nHvis du ikke vil se denne annonsen kan du alltids deaktivere Wago som leverandør i fanen for alternativer.",
++      "MESSAGE": "For å kunne bruke <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> som leverandør av utvidelser, og støtte forfatterene deres for deres harde arbeid med favorittutvidelsene dine, er vi nødt til å vise denne annonsen.\n\nHvis du ikke vil se denne annonsen kan du alltids deaktivere Wago / CurseForge som leverandør i fanen for alternativer.",
+       "TITLE": "Hvorfor ser jeg denne annonsen?"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "Installer utvidelse fra URL"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "Nytt i versjon {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "ad vendors",
++        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
++        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
++        "MANAGE_BUTTON": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "Før vi kan komme igang må vi sette opp noen tillatelser for appen.",
+       "POSITIVE_BUTTON": "Bekreft",
+       "TELEMETRY": {
+         "DESCRIPTION": "Vil du bidra til å forbedre WowUp ved å sende anonyme installasjonsdata og/eller feil?",
+         "TOGGLE_LABEL": "Tillat telemetri"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Konfigurer apputgivelseskanalen",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "Ja, jeg forstår",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "Veksle mellom beta- og stabilutgivelsene av applikasjonen",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Kanal",
+         "APP_RELEASE_CHANNEL_LABEL": "Apputgivelseskanal",
+         "CURRENT_LANGUAGE_LABEL": "Nåværende språk",
++        "CURSE_PROTOCOL_DESCRIPTION": "When downloading addons from the CurseForge website, WowUp will handle the install",
++        "CURSE_PROTOCOL_LABEL": "Handle CurseForge download links",
+         "ENABLE_APP_BADGE_DESCRIPTION": "Viser en teller på appikonet med antall tilgjengelige oppdateringer.",
+         "ENABLE_APP_BADGE_LABEL": "Aktiver notifikasjonsbadge for appen",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Aktiver ulike systemvarsler, som for eksempel for automatisk oppdaterte utvidelser.",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "Aktiver systemvarsler",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "Når du åpner en detaljside for en utvidelse, åpnes automatisk den sist åpnede fanen",
+         "KEEP_LAST_OPENED_TAB_LABEL": "Behold siste åpnede fane",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "Aktiver maskinvareakselerasjon",
+         "USE_SYMLINK_SUPPORT": "Aktiver symlink-støtte",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "Aktivering av symlink-støtte lar WowUp oppdage symlinker ved reskanning. Advarsel: Hvis du ikke vet hva en symlink er, trenger du ikke denne. For øyeblikket, når du oppdaterer, erstattes symlinker med en faktisk mappe, og koblingen går tapt.",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "Aktiver symlink-støtte?",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Tillat WowUp å skanne symlink-mapper i utvidelsesmappen din. Advarsel: de vil bli erstattet ved oppdatering/installering."
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
++        "ADS_OPTION_LABEL": "Ads Personalization & Data",
++        "ADS_OPTION_MANAGE": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "Vis konfigurasjonsfiler",
+         "CONFIG_FILES_DESCRIPTION": "Åpne mappen der for eksempel addons.json og preferences.json er lagret.",
+         "CONFIG_FILES_LABEL": "Konfigurasjonsfiler",
+         "DEBUG_DATA_BUTTON": "Lagre debugdata",
+         "DEBUG_DATA_DESCRIPTION": "Logg debugdata for å hjelpe deg med å diagnostisere potensielle problemer. Hvis du er nyskjerrig kan du finne dette i den siste loggfilen.",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "Om",
+         "ADDONS": "Utvidelser",
+         "APPLICATION": "Applikasjon",
+         "CLIENTS": "Klienter",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "Debug"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "Legg til ny",
+         "AUTO_UPDATE_DESCRIPTION": "Alle eksisterende og nyinstallerte utvidelser vil bli satt til å oppdateres automatisk som standard",
+         "AUTO_UPDATE_LABEL": "Oppdater automatisk",
+--- wowup-electron/src/assets/i18n/ko.json
++++ wowup-electron/src/assets/i18n/ko.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "Reset",
+     "VERSION_MISMATCH": "Versions do not match"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "Why am I seeing this ad?",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "In order to use <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> as an addon provider and support their authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable wago.io as a provider in the options tab.",
++      "MESSAGE": "In order to use <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> as an addon provider and support their authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable wago.io / CurseForge as a provider in the options tab.",
+       "TITLE": "Why am I seeing this ad?"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "설치할 애드온 URL 주소"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "Patch Notes {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "ad vendors",
++        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
++        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
++        "MANAGE_BUTTON": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "Before we get started we need to setup a few permissions for the app.",
+       "POSITIVE_BUTTON": "Confirm",
+       "TELEMETRY": {
+         "DESCRIPTION": "Help improve WowUp by sending anonymous app install data and/or errors?",
+         "TOGGLE_LABEL": "Allow Telemetry"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Setting the app release channel",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "Yes, I understand",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "Toggle between the Beta and Stable releases of the application",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Channel",
+         "APP_RELEASE_CHANNEL_LABEL": "Application Release Channel",
+         "CURRENT_LANGUAGE_LABEL": "현재 언어",
++        "CURSE_PROTOCOL_DESCRIPTION": "When downloading addons from the CurseForge website, WowUp will handle the install",
++        "CURSE_PROTOCOL_LABEL": "Handle CurseForge download links",
+         "ENABLE_APP_BADGE_DESCRIPTION": "Show a badge on the app icon with the number of addons with available updates.",
+         "ENABLE_APP_BADGE_LABEL": "Enable app badge notification",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "애드온 자동업데이트 등과 같은 다양한 시스템 알림 팝업 활성화 여부",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "시스템 알림 활성화",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "When opening an addon detail page, automatically select the last opened tab",
+         "KEEP_LAST_OPENED_TAB_LABEL": "Keep last opened tab",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "하드웨어 가속 활성화",
+         "USE_SYMLINK_SUPPORT": "Enable Symlink Support",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "Enabling symlink support will allow WowUp to recognize symlinks when performing a re-scan. Warning: If you do not know what a symlink is, you do not need this. When updating symlinks will currently be replaced with an actual folder and the link lost.",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "Enable symlink support?",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Allow WowUp to scan symlink folders in your addon folder. Warning: they will be replaced when updating/installing."
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
++        "ADS_OPTION_LABEL": "Ads Personalization & Data",
++        "ADS_OPTION_MANAGE": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "Show Config Files",
+         "CONFIG_FILES_DESCRIPTION": "Open the folder where for example your addons.json and preferences.json are stored.",
+         "CONFIG_FILES_LABEL": "Config Files",
+         "DEBUG_DATA_BUTTON": "디버그 데이터 덤프",
+         "DEBUG_DATA_DESCRIPTION": "잠재적인 문제를 진단하는데 도움을 주기 위해 디버그 데이터를 기록합니다. 궁금하시다면 최신 로그 파일에서 확인하실 수 있습니다.",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "About",
+         "ADDONS": "애드온",
+         "APPLICATION": "게임 애플리케이션",
+         "CLIENTS": "클라이언트",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "디버그"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "Add New",
+         "AUTO_UPDATE_DESCRIPTION": "새로 설치되는 애드온의 자동업데이트 옵션을 활성화합니다.",
+         "AUTO_UPDATE_LABEL": "자동 업데이트",
+--- wowup-electron/src/assets/i18n/it.json
++++ wowup-electron/src/assets/i18n/it.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "Reset",
+     "VERSION_MISMATCH": "Versions do not match"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "Why am I seeing this ad?",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "In order to use <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> as an addon provider and support their authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable wago.io as a provider in the options tab.",
++      "MESSAGE": "In order to use <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> as an addon provider and support their authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable wago.io / CurseForge as a provider in the options tab.",
+       "TITLE": "Why am I seeing this ad?"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "Installa un Addon tramite URL"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "Note della Patch {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "ad vendors",
++        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
++        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
++        "MANAGE_BUTTON": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "Before we get started we need to setup a few permissions for the app.",
+       "POSITIVE_BUTTON": "Confirm",
+       "TELEMETRY": {
+         "DESCRIPTION": "Help improve WowUp by sending anonymous app install data and/or errors?",
+         "TOGGLE_LABEL": "Allow Telemetry"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Setting the app release channel",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "Yes, I understand",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "Toggle between the Beta and Stable releases of the application",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Channel",
+         "APP_RELEASE_CHANNEL_LABEL": "Application Release Channel",
+         "CURRENT_LANGUAGE_LABEL": "Lingua Corrente",
++        "CURSE_PROTOCOL_DESCRIPTION": "Quando si scaricano addons dal sito Web CurseForge, WowUp ne gestirà l'installazione",
++        "CURSE_PROTOCOL_LABEL": "Gestisci i link dei downloads da CurseForge",
+         "ENABLE_APP_BADGE_DESCRIPTION": "Mostra un indicatore di notifica sull'icona dell'applicazione con il numero di addons con un aggiornamento disponibile.",
+         "ENABLE_APP_BADGE_LABEL": "Abilita indicatore di notifica",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Abilita i vari popup di notifica del sistema, come gli addons aggiornati automaticamente.",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "Notifiche di Sistema",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "When opening an addon detail page, automatically select the last opened tab",
+         "KEEP_LAST_OPENED_TAB_LABEL": "Keep last opened tab",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "Accelerazione Hardware",
+         "USE_SYMLINK_SUPPORT": "Abilita il Supporto Symlink",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "L'abilitazione del supporto symlink consentirà a WowUp di riconoscere i symlinks durante l'esecuzione di una nuova scansione. Attenzione: se non sai cos'è un symlink, puoi anche non procedere. Durante l'aggiornamento, i symlinks verranno sostituiti con una cartella reale e il collegamento viene perso.",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "Abilitare il supporto symlink?",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Consenti a WowUp di scansionare le cartelle dei symlinks nella cartella dell'addon. Attenzione: verranno sostituiti durante l'aggiornamento/installazione."
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
++        "ADS_OPTION_LABEL": "Ads Personalization & Data",
++        "ADS_OPTION_MANAGE": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "Show Config Files",
+         "CONFIG_FILES_DESCRIPTION": "Open the folder where for example your addons.json and preferences.json are stored.",
+         "CONFIG_FILES_LABEL": "Config Files",
+         "DEBUG_DATA_BUTTON": "Dump Dati Di Debug",
+         "DEBUG_DATA_DESCRIPTION": "Registra i dati di debug per aiutare a diagnosticare potenziali problemi. Questi dati possono essere trovati nei tuoi ultimi file di log.",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "About",
+         "ADDONS": "Addons",
+         "APPLICATION": "Applicazione",
+         "CLIENTS": "Clients",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "Debug"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "Aggiungi Nuovo",
+         "AUTO_UPDATE_DESCRIPTION": "I nuovi addons installati saranno impostati per l'aggiornamento automatico ",
+         "AUTO_UPDATE_LABEL": "Aggiornamento Automatico",
+--- wowup-electron/src/assets/i18n/fr.json
++++ wowup-electron/src/assets/i18n/fr.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "Reset",
+     "VERSION_MISMATCH": "Versions do not match"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "Why am I seeing this ad?",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "In order to use <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> as an addon provider and support their authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable wago.io as a provider in the options tab.",
++      "MESSAGE": "In order to use <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> as an addon provider and support their authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable wago.io / CurseForge as a provider in the options tab.",
+       "TITLE": "Why am I seeing this ad?"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "URL de l'addon à installer"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "Patch Notes {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "ad vendors",
++        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
++        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
++        "MANAGE_BUTTON": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "Before we get started we need to setup a few permissions for the app.",
+       "POSITIVE_BUTTON": "Confirm",
+       "TELEMETRY": {
+         "DESCRIPTION": "Help improve WowUp by sending anonymous app install data and/or errors?",
+         "TOGGLE_LABEL": "Allow Telemetry"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Setting the app release channel",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "Yes, I understand",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "Toggle between the Beta and Stable releases of the application",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Channel",
+         "APP_RELEASE_CHANNEL_LABEL": "Application Release Channel",
+         "CURRENT_LANGUAGE_LABEL": "Langue actuelle",
++        "CURSE_PROTOCOL_DESCRIPTION": "When downloading addons from the CurseForge website, WowUp will handle the install",
++        "CURSE_PROTOCOL_LABEL": "Handle CurseForge download links",
+         "ENABLE_APP_BADGE_DESCRIPTION": "Show a badge on the app icon with the number of addons with available updates.",
+         "ENABLE_APP_BADGE_LABEL": "Enable app badge notification",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Activer les fenêtres contextuelles système comme la mise à jour auto des addons.",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "Activer le système de notification",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "A l'ouverture de la fenêtre de détails d'un addon, selectionne automatiquement le dernier onglet utilisé",
+         "KEEP_LAST_OPENED_TAB_LABEL": "Garder le dernier onglet de détail ouvert",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "Activer l'accélération matérielle",
+         "USE_SYMLINK_SUPPORT": "Enable Symlink Support",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "Enabling symlink support will allow WowUp to recognize symlinks when performing a re-scan. Warning: If you do not know what a symlink is, you do not need this. When updating symlinks will currently be replaced with an actual folder and the link lost.",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "Enable symlink support?",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Allow WowUp to scan symlink folders in your addon folder. Warning: they will be replaced when updating/installing."
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
++        "ADS_OPTION_LABEL": "Ads Personalization & Data",
++        "ADS_OPTION_MANAGE": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "Show Config Files",
+         "CONFIG_FILES_DESCRIPTION": "Open the folder where for example your addons.json and preferences.json are stored.",
+         "CONFIG_FILES_LABEL": "Config Files",
+         "DEBUG_DATA_BUTTON": "Dump des données de débogage",
+         "DEBUG_DATA_DESCRIPTION": "Log les données de débogage pour aider à diagnostiquer les problèmes potentiels. Cela peut être trouvé dans votre dernier fichier journal pour les curieux.",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "About",
+         "ADDONS": "Addons",
+         "APPLICATION": "Application",
+         "CLIENTS": "Clients",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "Debug"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "Add New",
+         "AUTO_UPDATE_DESCRIPTION": "Les addons nouvellement installés seront mises à jour automatiquement par défaut",
+         "AUTO_UPDATE_LABEL": "Mise à jour automatique",
+--- wowup-electron/src/assets/i18n/es.json
++++ wowup-electron/src/assets/i18n/es.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "Reiniciar",
+     "VERSION_MISMATCH": "Las versiones no coinciden"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "¿Por qué estoy viendo este anuncio?",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "Para poder usar <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> como proveedor de addons y apoyar a sus autores por su duro trabajo, se nos requiere mostrar esta publicidad.\n\nSi no quiere ver estos anuncios, puede desactivar el proveedor wago.io en la pestaña de Opciones.",
++      "MESSAGE": "Para poder usar <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> como proveedor de addons y apoyar a sus autores por su duro trabajo, se nos requiere mostrar esta publicidad.\n\nSi no quiere ver estos anuncios, puede desactivar el proveedor wago.io / CurseForge en la pestaña de Opciones.",
+       "TITLE": "¿Por qué estoy viendo este anuncio?"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "Instalar addon desde URL"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "Notas de la versión {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "vendedores de anuncios",
++        "DESCRIPTION_BOTTOM": ". Haz clic en el botón Administrar para controlar sus consentimientos, o para oponerse al procesado de sus datos. Puede cambiar sus preferencias en cualquier momento a través de la pantalla de configuración.",
++        "DESCRIPTION_TOP": " Para poder utilizar la integración con CurseForge de esta aplicación, estos requieren su consentimiento para mostrarle publicidad de uno de sus ",
++        "MANAGE_BUTTON": "Administrar",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "Antes de empezar, necesitamos configurar algunos permisos para la aplicación.",
+       "POSITIVE_BUTTON": "Confirmar",
+       "TELEMETRY": {
+         "DESCRIPTION": "¿Ayudar a mejorar WowUp enviando datos anónimos de instalación y/o error?",
+         "TOGGLE_LABEL": "Permitir telemetría"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Configuración del canal de publicación de WowUp",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "Sí, lo entiendo",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "Cambia entre las versiones Beta y Estable de la aplicación",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Canal",
+         "APP_RELEASE_CHANNEL_LABEL": "Canal de publicación de la aplicación",
+         "CURRENT_LANGUAGE_LABEL": "Idioma actual",
++        "CURSE_PROTOCOL_DESCRIPTION": "Al descargar addons desde la web de CurseForge, WowUp se hará cargo de la instalación",
++        "CURSE_PROTOCOL_LABEL": "Tramitar enlaces de descarga de CurseForge",
+         "ENABLE_APP_BADGE_DESCRIPTION": "Muestra un contador en el icono de la aplicación en la barra de tareas con el número de addons con actualizaciones disponibles.",
+         "ENABLE_APP_BADGE_LABEL": "Activar contador en el icono",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Activa varios mensajes de notificación del sistema, tales como cuando los addons son actualizados automáticamente.",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "Activar notificaciones del sistema",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "Al abrir los detalles de un addon, selecciona automáticamente la última pestaña abierta.",
+         "KEEP_LAST_OPENED_TAB_LABEL": "Recordar la última pestaña abierta",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "Activar aceleración por hardware",
+         "USE_SYMLINK_SUPPORT": "Activar soporte de enlaces simbólicos (symlink)",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "Activar el soporte de enlaces simbólicos permite a WowUp reconocerlos durante el reescaneo.\n\nAdvertencia: Si no sabe lo que es un enlace simbólico, no necesita activar esto. Al actualizar addons, los enlaces simbólicos serán reemplazados por copias de las carpetas y el enlace se perderá.",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "¿Activar soporte de enlaces simbólicos?",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Permite a WowUp escanear enlaces simbólicos en la carpeta de addons.\nAdvertecia: Los enlaces serán reemplazados al actualizar/instalar los addons."
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "Ver y administrar la manera en que los anunciantes de CurseForge pueden usar sus datos para la personalización de la publicidad",
++        "ADS_OPTION_LABEL": "Personalización de publicidad y datos",
++        "ADS_OPTION_MANAGE": "Administrar",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "Mostrar archivos de configuración",
+         "CONFIG_FILES_DESCRIPTION": "Abre la carpeta donde se encuentra almacenado addons.json y preferences.json por ejemplo.",
+         "CONFIG_FILES_LABEL": "Archivos de configuración",
+         "DEBUG_DATA_BUTTON": "Eliminar datos de depuración",
+         "DEBUG_DATA_DESCRIPTION": "Registra datos de depuración y ayuda a diagnosticar problemas potenciales. Puede curiosearlo abriendo el último archivo de registro.",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "Acerca de",
+         "ADDONS": "Addons",
+         "APPLICATION": "Aplicación",
+         "CLIENTS": "Clientes",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "Depuración"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "Añadir nuevo",
+         "AUTO_UPDATE_DESCRIPTION": "Los addons instalados después de activar esta opción se configurarán para actualizarse automáticamente de forma predeterminada. No afecta a los addons instalados con anterioridad.",
+         "AUTO_UPDATE_LABEL": "Actualización automática",
+--- wowup-electron/src/assets/i18n/en.json
++++ wowup-electron/src/assets/i18n/en.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "Reset",
+     "VERSION_MISMATCH": "This addon is already installed, but the versions do not match"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "Why am I seeing this ad?",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "In order to use <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> as an addon provider and help support authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable Wago as a provider in the options tab.",
++      "MESSAGE": "In order to use <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> as an addon provider and help support authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable Wago / CurseForge as a provider in the options tab.",
+       "TITLE": "Why am I seeing this ad?"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "Install Addon URL"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "Patch Notes {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "ad vendors",
++        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
++        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
++        "MANAGE_BUTTON": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "Before we get started we need to setup a few permissions for the app.",
+       "POSITIVE_BUTTON": "Confirm",
+       "TELEMETRY": {
+         "DESCRIPTION": "Help improve WowUp by sending anonymous app install data and/or errors?",
+         "TOGGLE_LABEL": "Allow Telemetry"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Setting the app release channel",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "Yes, I understand",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "Toggle between the Beta and Stable releases of the application",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Channel",
+         "APP_RELEASE_CHANNEL_LABEL": "Application Release Channel",
+         "CURRENT_LANGUAGE_LABEL": "Current Language",
++        "CURSE_PROTOCOL_DESCRIPTION": "When downloading addons from the CurseForge website, WowUp will handle the install",
++        "CURSE_PROTOCOL_LABEL": "Handle CurseForge download links",
+         "ENABLE_APP_BADGE_DESCRIPTION": "Show a badge on the app icon with the number of addons with available updates.",
+         "ENABLE_APP_BADGE_LABEL": "Enable App Badge Notification",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Enable various system notification popups, such as auto updated addons.",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "Enable System Notifications",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "When opening an addon detail page, automatically select the last opened tab",
+         "KEEP_LAST_OPENED_TAB_LABEL": "Keep last opened tab",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "Enable Hardware Acceleration",
+         "USE_SYMLINK_SUPPORT": "Enable Symlink Support",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "Enabling symlink support will allow WowUp to recognize symlinks when performing a re-scan. Warning: If you do not know what a symlink is, you do not need this. When updating symlinks will currently be replaced with an actual folder and the link lost.",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "Enable symlink support?",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Allow WowUp to scan symlink folders in your addon folder. Warning: they will be replaced when updating/installing."
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
++        "ADS_OPTION_LABEL": "Ads Personalization & Data",
++        "ADS_OPTION_MANAGE": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "Show Config Files",
+         "CONFIG_FILES_DESCRIPTION": "Open the folder where for example your addons.json and preferences.json are stored.",
+         "CONFIG_FILES_LABEL": "Config Files",
+         "DEBUG_DATA_BUTTON": "Dump Debug Data",
+         "DEBUG_DATA_DESCRIPTION": "Log debug data to help with diagnosing potential issues. This can be found in your latest log file for the curious.",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "About",
+         "ADDONS": "Addons",
+         "APPLICATION": "Application",
+         "CLIENTS": "Clients",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "Debug"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "Add New",
+         "AUTO_UPDATE_DESCRIPTION": "All existing and newly installed addons will be set to auto update by default",
+         "AUTO_UPDATE_LABEL": "Auto Update",
+--- wowup-electron/src/assets/i18n/de.json
++++ wowup-electron/src/assets/i18n/de.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "Zurücksetzen",
+     "VERSION_MISMATCH": "Versionen stimmen nicht überein"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "Warum sehe ich diese Werbung?",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "Um <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> als Addon-Anbieter zu nutzen und seine Autoren für ihre harte Arbeit an deinen bevorzugten Addons zu unterstützen, müssen wir diese Werbung zeigen.\n\nWenn du diese Werbung nicht sehen möchtest, kannst du wago.io jederzeit als Addon-Anbieter in den Einstellungen deaktivieren.",
++      "MESSAGE": "Um <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> als Addon-Anbieter zu nutzen und seine Autoren für ihre harte Arbeit an deinen bevorzugten Addons zu unterstützen, müssen wir diese Werbung zeigen.\n\nWenn du diese Werbung nicht sehen möchtest, kannst du wago.io / CurseForge jederzeit als Addon-Anbieter in den Einstellungen deaktivieren.",
+       "TITLE": "Warum sehe ich diese Werbung?"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "Installation eines Addons über eine externe URL"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "Neu in Version {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "ad vendors",
++        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
++        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
++        "MANAGE_BUTTON": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "Bevor wir beginnen, müssen wir einige Berechtigungen für die App einrichten.",
+       "POSITIVE_BUTTON": "Bestätigen",
+       "TELEMETRY": {
+         "DESCRIPTION": "Möchest Du helfen, WowUp zu verbessern, indem anonyme Installationsdaten und/oder Fehler gesendet werden?",
+         "TOGGLE_LABEL": "Telemetrie zulassen"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Einstellen des App-Release-Kanals",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "Ja ich verstehe",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "Wechseln zwischen der Beta- und Stabilen-Versionen der Anwendung",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Kanal",
+         "APP_RELEASE_CHANNEL_LABEL": "App-Release-Kanal",
+         "CURRENT_LANGUAGE_LABEL": "Aktuelle Sprache",
++        "CURSE_PROTOCOL_DESCRIPTION": "Beim Herunterladen von Addons von der CurseForge-Website übernimmt WowUp die Installation",
++        "CURSE_PROTOCOL_LABEL": "CurseForge-Download-Links verarbeiten",
+         "ENABLE_APP_BADGE_DESCRIPTION": "Zeigt auf dem App-Symbol einen Zähler, mit der Anzahl an verfügbaren Updates an.",
+         "ENABLE_APP_BADGE_LABEL": "App-Badge-Benachrichtigung aktivieren",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Aktivieren/Deaktivieren verschiedener Systembenachrichtigungen",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "Systembenachrichtigungen aktivieren",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "Beim Öffnen einer AddOn-Detailansicht wird automatisch der zuletzt geöffnete Tab ausgewählt",
+         "KEEP_LAST_OPENED_TAB_LABEL": "Zuletzt geöffneten Tab beibehalten",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "Hardwarebeschleunigung aktivieren",
+         "USE_SYMLINK_SUPPORT": "Symlink-Unterstützung aktivieren",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "Durch das Aktivieren der Symlink-Unterstützung kann WowUp Symlinks erkennen, wenn ein erneuter Scan durchgeführt wird. Warnung: Wenn Du nicht weißt, was ein Symlink ist, brauchst Du dies nicht. Beim Aktualisieren werden Symlinks derzeit durch einen tatsächlichen Ordner ersetzt und der Link geht verloren.",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "Symlink-Unterstützung aktivieren?",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Erlaubt WowUp Symlink-Ordner in deinem Addon-Ordner zu scannen. Warnung: Diese werden beim Aktualisieren/Installieren ersetzt."
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
++        "ADS_OPTION_LABEL": "Ads Personalization & Data",
++        "ADS_OPTION_MANAGE": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "Konfigurationsdateien anzeigen",
+         "CONFIG_FILES_DESCRIPTION": "Öffne den Ordner, in dem beispielsweise deine addons.json und preferences.json gespeichert sind.",
+         "CONFIG_FILES_LABEL": "Konfigurationsdateien",
+         "DEBUG_DATA_BUTTON": "Debug-Daten speichern",
+         "DEBUG_DATA_DESCRIPTION": "Protokolliere Debug-Daten, um mögliche Probleme zu diagnostizieren. Dies findest Du in Deiner aktuellen Protokolldatei (für Neugierige).",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "Über",
+         "ADDONS": "Addons",
+         "APPLICATION": "Anwendung",
+         "CLIENTS": "Clients",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "Debug"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "Neuen hinzufügen",
+         "AUTO_UPDATE_DESCRIPTION": "Neu installierte Addons werden standardmäßig auf 'Automatisches Update' eingestellt",
+         "AUTO_UPDATE_LABEL": "Automatisch aktualisieren",
+--- wowup-electron/src/assets/i18n/cs.json
++++ wowup-electron/src/assets/i18n/cs.json
+@@ -31,13 +31,13 @@
+     "RESET_BUTTON": "Reset",
+     "VERSION_MISMATCH": "Versions do not match"
+   },
+   "ADS": {
+     "AD_EXPLAINER_BUTTON": "Why am I seeing this ad?",
+     "AD_EXPLAINER_DIALOG": {
+-      "MESSAGE": "In order to use <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> as an addon provider and support their authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable wago.io as a provider in the options tab.",
++      "MESSAGE": "In order to use <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> / <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> as an addon provider and support their authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable wago.io / CurseForge as a provider in the options tab.",
+       "TITLE": "Why am I seeing this ad?"
+     }
+   },
+   "APP": {
+     "APP_MENU": {
+       "EDIT": {
+@@ -309,12 +309,19 @@
+       "TITLE": "URL adresa pro instalaci addonu"
+     },
+     "NEW_VERSION_POPUP": {
+       "TITLE": "Patch Notes {versionNumber}"
+     },
+     "PERMISSIONS": {
++      "CURSEFORGE": {
++        "DESCRIPTION_AD_LINK": "ad vendors",
++        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
++        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
++        "MANAGE_BUTTON": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "MESSAGE": "Before we get started we need to setup a few permissions for the app.",
+       "POSITIVE_BUTTON": "Confirm",
+       "TELEMETRY": {
+         "DESCRIPTION": "Help improve WowUp by sending anonymous app install data and/or errors?",
+         "TOGGLE_LABEL": "Allow Telemetry"
+       },
+@@ -511,12 +518,14 @@
+         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Setting the app release channel",
+         "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "Yes, I understand",
+         "APP_RELEASE_CHANNEL_DESCRIPTION": "Toggle between the Beta and Stable releases of the application",
+         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Channel",
+         "APP_RELEASE_CHANNEL_LABEL": "Application Release Channel",
+         "CURRENT_LANGUAGE_LABEL": "Jazyk",
++        "CURSE_PROTOCOL_DESCRIPTION": "When downloading addons from the CurseForge website, WowUp will handle the install",
++        "CURSE_PROTOCOL_LABEL": "Handle CurseForge download links",
+         "ENABLE_APP_BADGE_DESCRIPTION": "Show a badge on the app icon with the number of addons with available updates.",
+         "ENABLE_APP_BADGE_LABEL": "Enable app badge notification",
+         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Povolí různé systémové notifikace, např. po automatické aktualizaci addonů.",
+         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "Povolit systémové notifikace",
+         "KEEP_LAST_OPENED_TAB_DESCRIPTION": "When opening an addon detail page, automatically select the last opened tab",
+         "KEEP_LAST_OPENED_TAB_LABEL": "Keep last opened tab",
+@@ -549,12 +558,18 @@
+         "USE_HARDWARE_ACCELERATION_LABEL": "Zapnout hardwarovou akceleraci",
+         "USE_SYMLINK_SUPPORT": "Enable Symlink Support",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_DESCRIPTION": "Enabling symlink support will allow WowUp to recognize symlinks when performing a re-scan. Warning: If you do not know what a symlink is, you do not need this. When updating symlinks will currently be replaced with an actual folder and the link lost.",
+         "USE_SYMLINK_SUPPORT_CONFIRMATION_LABEL": "Enable symlink support?",
+         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Allow WowUp to scan symlink folders in your addon folder. Warning: they will be replaced when updating/installing."
+       },
++      "CURSEFORGE": {
++        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
++        "ADS_OPTION_LABEL": "Ads Personalization & Data",
++        "ADS_OPTION_MANAGE": "Manage",
++        "TITLE": "CurseForge"
++      },
+       "DEBUG": {
+         "CONFIG_FILES_BUTTON": "Show Config Files",
+         "CONFIG_FILES_DESCRIPTION": "Open the folder where for example your addons.json and preferences.json are stored.",
+         "CONFIG_FILES_LABEL": "Config Files",
+         "DEBUG_DATA_BUTTON": "Uložit debugovací data",
+         "DEBUG_DATA_DESCRIPTION": "Zaloguje debugovací data do logovacího souboru pro případnou diagnostiku problémů s aplikací. Pro zvědavce: Tato data naleznete v nejnovějším logovacím souboru.",
+@@ -566,12 +581,13 @@
+       },
+       "TABS": {
+         "ABOUT": "About",
+         "ADDONS": "Addony",
+         "APPLICATION": "Aplikace",
+         "CLIENTS": "WoW klienti",
++        "CURSEFORGE": "CurseForge",
+         "DEBUG": "Debug aplikace"
+       },
+       "WOW": {
+         "ADD_CLIENT_BUTTON": "Add New",
+         "AUTO_UPDATE_DESCRIPTION": "Nově instalované addony budou automaticky označeny k automatické aktualizaci pomocí WowUp.",
+         "AUTO_UPDATE_LABEL": "Automatické aktualizace",
+--- wowup-electron/src/app/services/wowup/patch-notes.service.ts
++++ wowup-electron/src/app/services/wowup/patch-notes.service.ts
+@@ -27,7 +27,7 @@
+   {
+     Version: "2.9.2",
+     html: `
+-    <h4>New Features</h4>
++    <h4 style="margin-top: 1em;">New Features</h4>
+     <ul>
+     <li>Dynamic WoW client names (CyanoHao)</li>
+     </ul>
+@@ -36,6 +36,7 @@
+     <li>Spanish locale updates (SkollVargr)</li>
+     <li>Norwegian locale updates (espenja)</li>
+     <li>German locale updates (maestrohdude)</li>
++    <li>Russian locale updates (Valdemar)</li>
+     <li>Improved WowInterface API usage for some addons</li>
+     <li>Improved private GitHub repo support</li>
+     <li>Disable the ability to shift + click columns</li>
+@@ -43,8 +44,10 @@
+     </ul>
+     <h4 style="margin-top: 1em;">Fixes</h4>
+     <ul>
++    <li>Searching on CurseForge should work more as expected</li>
+     <li>Fix an issue with My Addon columns appearing squished</li>
+     <li>Rendering lists should no longer fail due to malformed game version</li>
++    <li>Fix an issue with missing client types when installing from CF page link</li>
+     <li>Audio should now be muted just in case of an annoying ad</li>
+     <li>Fix an issue with window not showing at startup on Mac</li>
+     <li>Improve some error handling when installing addons</li>
+@@ -58,9 +61,12 @@
+     <ul>
+     <li>Added support for custom Wago API keys (Linaori)</li>
+     <li>Added support Dragonflight</li>
++    <li>Added support for CurseForge API</li>
++    <li>Added support handling CurseForge protocol</li>
+     </ul>
+     <h4 style="margin-top: 1em;">Changes</h4>
+     <ul>
++    <li>Spanish locale updates (SkollVargr)</li>
+     <li>Attempt to fix the weird diagonal line bug</li>
+     <li>Fix issues with 10.x interface version detection/sorting</li>
+     <li>Update a bunch of dependencies</li>
+--- wowup-electron/src/app/services/addons/addon-fingerprint.service.ts
++++ wowup-electron/src/app/services/addons/addon-fingerprint.service.ts
+@@ -1,9 +1,9 @@
+ import { Injectable } from "@angular/core";
+ import { AddonFolder, AddonScanResult } from "wowup-lib-core";
+-import { IPC_WOWUP_GET_SCAN_RESULTS } from "../../../common/constants";
++import { IPC_CURSE_GET_SCAN_RESULTS, IPC_WOWUP_GET_SCAN_RESULTS } from "../../../common/constants";
+ import { ElectronService } from "../electron/electron.service";
+ 
+ @Injectable({
+   providedIn: "root",
+ })
+ export class AddonFingerprintService {
+@@ -16,11 +16,19 @@
+     const wowUpScanResults: AddonScanResult[] = await this._electronService.invoke(
+       IPC_WOWUP_GET_SCAN_RESULTS,
+       filePaths
+     );
+     console.timeEnd("WowUpScan");
+ 
++    console.time("CFScan");
++    const cfScanResults: AddonScanResult[] = await this._electronService.invoke(
++      IPC_CURSE_GET_SCAN_RESULTS,
++      filePaths
++    );
++    console.timeEnd("CFScan");
++
+     addonFolders.forEach((af) => {
+       af.wowUpScanResults = wowUpScanResults.find((wur) => wur.path === af.path);
++      af.cfScanResults = cfScanResults.find((cfr) => cfr.path === af.path);
+     });
+   }
+ }
+--- wowup-electron/src/app/services/addons/addon.service.ts
++++ wowup-electron/src/app/services/addons/addon.service.ts
+@@ -36,12 +36,13 @@
+ import { TocService } from "../toc/toc.service";
+ import { WarcraftInstallationService } from "../warcraft/warcraft-installation.service";
+ import { WarcraftService } from "../warcraft/warcraft.service";
+ import { WowUpService } from "../wowup/wowup.service";
+ import { AddonProviderFactory } from "./addon.provider.factory";
+ import { AddonFingerprintService } from "./addon-fingerprint.service";
++import { CurseAddonProvider } from "../../addon-providers/curse-addon-provider";
+ import {
+   Addon,
+   AddonCategory,
+   AddonChannelType,
+   AddonDependency,
+   AddonDependencyType,
+@@ -584,13 +585,17 @@
+     } else {
+       this._activeInstalls.splice(itemIdx, 1, updateEvent);
+     }
+   };
+ 
+   public async logDebugData(): Promise<void> {
++    const curseProvider = this._addonProviderService.getProvider<CurseAddonProvider>(ADDON_PROVIDER_CURSEFORGE);
+     const hubProvider = this._addonProviderService.getProvider<WowUpAddonProvider>(ADDON_PROVIDER_HUB);
++    if (curseProvider === undefined) {
++      throw new Error("curse provider not found");
++    }
+     if (hubProvider === undefined) {
+       throw new Error("hub provider not found");
+     }
+ 
+     const clientMap = {};
+     const installations = await this._warcraftInstallationService.getWowInstallationsAsync();
+@@ -598,20 +603,26 @@
+       const clientTypeName = getEnumName(WowClientType, installation.clientType);
+ 
+       const useSymlinkMode = await this._wowUpService.getUseSymlinkMode();
+       const addonFolders = await this._warcraftService.listAddons(installation, useSymlinkMode);
+       await this._addonFingerprintService.getFingerprints(addonFolders);
+ 
++      const curseMap = {};
+       const hubMap = {};
+       addonFolders.forEach((af) => {
++        if (af.cfScanResults !== undefined) {
++          curseMap[af.cfScanResults.folderName] = af.cfScanResults.fingerprint;
++        }
++
+         if (af.wowUpScanResults !== undefined) {
+           hubMap[af.wowUpScanResults.folderName] = af.wowUpScanResults.fingerprint;
+         }
+       });
+ 
+       clientMap[clientTypeName] = {
++        curse: curseMap,
+         hub: hubMap,
+       };
+ 
+       console.log(`clientType ${clientTypeName} addon fingerprints`);
+     }
+ 
+--- wowup-electron/src/app/services/addons/addon.provider.factory.ts
++++ wowup-electron/src/app/services/addons/addon.provider.factory.ts
+@@ -16,12 +16,13 @@
+ import { AddonProviderState } from "../../models/wowup/addon-provider-state";
+ import { ADDON_PROVIDER_UNKNOWN, WAGO_PROMPT_KEY } from "../../../common/constants";
+ import { Subject } from "rxjs";
+ import { PreferenceStorageService } from "../storage/preference-storage.service";
+ import { SensitiveStorageService } from "../storage/sensitive-storage.service";
+ import { UiMessageService } from "../ui-message/ui-message.service";
++import { CurseAddonProvider } from "../../addon-providers/curse-addon-provider";
+ import { WowUpAddonProvider, WowInterfaceAddonProvider, TukUiAddonProvider } from "wowup-lib-core/lib/addon-providers";
+ import { AppConfig } from "../../../environments/environment";
+ import { GenericNetworkInterface } from "../../business-objects/generic-network-interface";
+ 
+ @Injectable({
+   providedIn: "root",
+@@ -82,12 +83,13 @@
+     }
+     const providers: AddonProvider[] = [
+       this.createZipAddonProvider(),
+       this.createRaiderIoAddonProvider(),
+       this.createWowUpCompanionAddonProvider(),
+       this.createWowUpAddonProvider(),
++      this.createCurseProvider(),
+       this.createWagoAddonProvider(),
+       this.createTukUiAddonProvider(),
+       this.createWowInterfaceAddonProvider(),
+       this.createGitHubAddonProvider(),
+     ];
+ 
+@@ -140,12 +142,16 @@
+   public createWowUpCompanionAddonProvider(): WowUpCompanionAddonProvider {
+     return new WowUpCompanionAddonProvider(this._fileService, this._tocService);
+   }
+ 
+   public createRaiderIoAddonProvider(): RaiderIoAddonProvider {
+     return new RaiderIoAddonProvider(this._tocService);
++  }
++
++  public createCurseProvider(): CurseAddonProvider {
++    return new CurseAddonProvider(this._cachingService, this._networkService, this._tocService);
+   }
+ 
+   public createTukUiAddonProvider(): TukUiAddonProvider {
+     return new TukUiAddonProvider(this._tukuiNetworkInterface);
+   }
+ 
+--- wowup-electron/src/app/pages/options/options.component.ts
++++ wowup-electron/src/app/pages/options/options.component.ts
+@@ -1,22 +1,34 @@
+-import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
++import { ChangeDetectionStrategy, Component, Input, OnInit } from "@angular/core";
++import { IPC_OW_IS_CMP_REQUIRED } from "../../../common/constants";
+ import { ElectronService } from "../../services";
+ import { SessionService } from "../../services/session/session.service";
+ import { WowUpService } from "../../services/wowup/wowup.service";
++// import { IPC_OW_IS_CMP_REQUIRED, IPC_OW_OPEN_CMP } from "../../../../common/constants";
+ 
+ @Component({
+   selector: "app-options",
+   templateUrl: "./options.component.html",
+   styleUrls: ["./options.component.scss"],
+   changeDetection: ChangeDetectionStrategy.OnPush,
+ })
+-export class OptionsComponent {
++export class OptionsComponent implements OnInit {
+   @Input("tabIndex") public tabIndex!: number;
+ 
+   public optionTabIndex = 0;
++  public isCMPRequired = false;
+ 
+   public constructor(
+     public wowUpService: WowUpService,
+     public sessionService: SessionService,
+     public electronService: ElectronService
+   ) {}
++
++  public ngOnInit(): void {
++    this.electronService
++      .invoke<boolean>(IPC_OW_IS_CMP_REQUIRED)
++      .then((cmpRequired) => {
++        this.isCMPRequired = cmpRequired;
++      })
++      .catch((e) => console.error("IPC_OW_IS_CMP_REQUIRED failed", e));
++  }
+ }
+--- wowup-electron/src/app/pages/options/options.component.html
++++ wowup-electron/src/app/pages/options/options.component.html
+@@ -29,12 +29,15 @@
+             <button mat-list-item (click)="optionTabIndex = 4">
+               {{ "WTF Explorer" | translate }}
+             </button>
+             <button mat-list-item (click)="optionTabIndex = 5">
+               {{ "PAGES.OPTIONS.TABS.ABOUT" | translate }}
+             </button>
++            <button *ngIf="isCMPRequired" mat-list-item (click)="optionTabIndex = 6">
++              {{ "PAGES.OPTIONS.TABS.CURSEFORGE" | translate }}
++            </button>
+           </mat-action-list>
+         </div>
+       </div>
+     </div>
+     <div class="nav-content-container bg-secondary-2 text-1">
+       <div class="nav-content-wrap">
+@@ -55,12 +58,15 @@
+             <mat-tab label="WtfExplorer">
+               <app-wtf-explorer [active]="optionTabIndex === 4"></app-wtf-explorer>
+             </mat-tab>
+             <mat-tab label="About">
+               <app-about></app-about>
+             </mat-tab>
++            <mat-tab label="CurseForge">
++              <app-options-curseforge-section></app-options-curseforge-section>
++            </mat-tab>
+           </mat-tab-group>
+         </div>
+       </div>
+     </div>
+   </div>
+ </div>
+--- wowup-electron/src/app/pages/home/home.component.ts
++++ wowup-electron/src/app/pages/home/home.component.ts
+@@ -1,14 +1,15 @@
+-import { from, Subscription } from "rxjs";
+-import { filter, first, map, switchMap } from "rxjs/operators";
++import { from, of, Subject, Subscription } from "rxjs";
++import { catchError, filter, first, map, switchMap, takeUntil, tap } from "rxjs/operators";
+ 
+ import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from "@angular/core";
+ import { MatSnackBar } from "@angular/material/snack-bar";
+ import { TranslateService } from "@ngx-translate/core";
+ 
+ import {
++  CURSE_PROTOCOL_NAME,
+   IPC_POWER_MONITOR_RESUME,
+   IPC_POWER_MONITOR_UNLOCK,
+   TAB_INDEX_ABOUT,
+   TAB_INDEX_GET_ADDONS,
+   TAB_INDEX_MY_ADDONS,
+   TAB_INDEX_NEWS,
+@@ -25,23 +26,25 @@
+ import { DialogFactory } from "../../services/dialog/dialog.factory";
+ import { SessionService } from "../../services/session/session.service";
+ import { SnackbarService } from "../../services/snackbar/snackbar.service";
+ import { WarcraftInstallationService } from "../../services/warcraft/warcraft-installation.service";
+ import { WowUpService } from "../../services/wowup/wowup.service";
+ import { WowUpProtocolService } from "../../services/wowup/wowup-protocol.service";
++import { getProtocol } from "../../utils/string.utils";
+ import { WowInstallation } from "wowup-lib-core/lib/models";
+ 
+ @Component({
+   selector: "app-home",
+   templateUrl: "./home.component.html",
+   styleUrls: ["./home.component.scss"],
+   changeDetection: ChangeDetectionStrategy.OnPush,
+ })
+ export class HomeComponent implements AfterViewInit, OnDestroy {
+   private _appUpdateInterval?: number;
+   private _subscriptions: Subscription[] = [];
++  private _onDestroy$ = new Subject<boolean>();
+ 
+   public readonly TAB_INDEX_MY_ADDONS = TAB_INDEX_MY_ADDONS;
+   public readonly TAB_INDEX_GET_ADDONS = TAB_INDEX_GET_ADDONS;
+   public readonly TAB_INDEX_ABOUT = TAB_INDEX_ABOUT;
+   public readonly TAB_INDEX_NEWS = TAB_INDEX_NEWS;
+   public readonly TAB_INDEX_SETTINGS = TAB_INDEX_SETTINGS;
+@@ -63,12 +66,24 @@
+     private _dialogFactory: DialogFactory,
+     private _wowUpProtocolService: WowUpProtocolService
+   ) {
+     const wowInstalledSub = this._warcraftInstallationService.wowInstallations$.subscribe((installations) => {
+       this.hasWowClient = installations.length > 0;
+     });
++
++    this.electronService.customProtocol$
++      .pipe(
++        takeUntil(this._onDestroy$),
++        filter((protocol) => getProtocol(protocol) === CURSE_PROTOCOL_NAME),
++        tap((protocol) => this.handleAddonInstallProtocol(protocol)),
++        catchError((e) => {
++          console.error(e);
++          return of(undefined);
++        })
++      )
++      .subscribe();
+ 
+     const scanErrorSub = this._addonService.scanError$.subscribe(this.onAddonScanError);
+     const addonInstallErrorSub = this._addonService.addonInstalled$.subscribe(this.onAddonInstalledEvent);
+ 
+     const scanUpdateSub = this._addonService.scanUpdate$
+       .pipe(filter((update) => update.type !== ScanUpdateType.Unknown))
+@@ -114,12 +129,14 @@
+     this.initAppUpdateCheck();
+ 
+     this._subscriptions.push(powerMonitorSub);
+   }
+ 
+   public ngOnDestroy(): void {
++    this._onDestroy$.next(true);
++    this._onDestroy$.complete();
+     window.clearInterval(this._appUpdateInterval);
+     this._subscriptions.forEach((sub) => sub.unsubscribe());
+   }
+ 
+   private initAppUpdateCheck() {
+     if (this._appUpdateInterval !== undefined) {
+--- wowup-electron/src/app/modules/options.module.ts
++++ wowup-electron/src/app/modules/options.module.ts
+@@ -11,21 +11,23 @@
+ import { OptionsWowSectionComponent } from "../components/options/options-wow-section/options-wow-section.component";
+ import { WowClientOptionsComponent } from "../components/options/wow-client-options/wow-client-options.component";
+ import { WtfExplorerComponent } from "../components/options/wtf-explorer/wtf-explorer.component";
+ import { MatModule } from "./mat-module";
+ import { PipesModule } from "./pipes.module";
+ import { DirectiveModule } from "./directive.module";
++import { OptionsCurseforgeSectionComponent } from "../components/options/options-curseforge-section/options-curseforge-section.component";
+ 
+ @NgModule({
+   declarations: [
+     WtfExplorerComponent,
+     AboutComponent,
+     OptionsAddonSectionComponent,
+     OptionsAppSectionComponent,
+     OptionsDebugSectionComponent,
+     OptionsWowSectionComponent,
++    OptionsCurseforgeSectionComponent,
+     WowClientOptionsComponent,
+   ],
+   imports: [
+     CommonModule,
+     FormsModule,
+     ReactiveFormsModule,
+@@ -38,11 +40,12 @@
+   exports: [
+     WtfExplorerComponent,
+     AboutComponent,
+     OptionsAddonSectionComponent,
+     OptionsAppSectionComponent,
+     OptionsDebugSectionComponent,
++    OptionsCurseforgeSectionComponent,
+     OptionsWowSectionComponent,
+     WowClientOptionsComponent,
+   ],
+ })
+ export class OptionsModule {}
+--- wowup-electron/src/app/components/options/options-app-section/options-app-section.component.ts
++++ wowup-electron/src/app/components/options/options-app-section/options-app-section.component.ts
+@@ -8,12 +8,13 @@
+ import { TranslateService } from "@ngx-translate/core";
+ 
+ import {
+   ALLIANCE_LIGHT_THEME,
+   ALLIANCE_THEME,
+   APP_PROTOCOL_NAME,
++  CURSE_PROTOCOL_NAME,
+   DEFAULT_LIGHT_THEME,
+   DEFAULT_THEME,
+   HORDE_LIGHT_THEME,
+   HORDE_THEME,
+ } from "../../../../common/constants";
+ import { ThemeGroup } from "../../../models/wowup/theme";
+@@ -42,12 +43,13 @@
+   selector: "app-options-app-section",
+   templateUrl: "./options-app-section.component.html",
+   styleUrls: ["./options-app-section.component.scss"],
+ })
+ export class OptionsAppSectionComponent implements OnInit {
+   public readonly wowupProtocolName = APP_PROTOCOL_NAME;
++  public readonly curseProtocolName = CURSE_PROTOCOL_NAME;
+ 
+   public minimizeOnCloseDescription = "";
+   public protocolRegistered = false;
+   public zoomScale = ZOOM_SCALE;
+   public currentScale = 1;
+   public languages: LocaleListItem[] = [
+@@ -87,12 +89,13 @@
+ 
+   public releaseChannels: ReleaseChannelViewModel[] = [
+     { value: WowUpReleaseChannelType.Stable, labelKey: "COMMON.ENUM.ADDON_CHANNEL_TYPE.STABLE" },
+     { value: WowUpReleaseChannelType.Beta, labelKey: "COMMON.ENUM.ADDON_CHANNEL_TYPE.BETA" },
+   ];
+ 
++  public curseforgeProtocolHandled$ = from(this.electronService.isDefaultProtocolClient(CURSE_PROTOCOL_NAME));
+   public wowupProtocolHandled$ = from(this.electronService.isDefaultProtocolClient(APP_PROTOCOL_NAME));
+ 
+   private _currentTheme: string;
+   public get currentTheme() {
+     return this._currentTheme;
+   }
+--- wowup-electron/src/app/components/options/options-app-section/options-app-section.component.html
++++ wowup-electron/src/app/components/options/options-app-section/options-app-section.component.html
+@@ -206,17 +206,34 @@
+       <small class="text-2">{{ "PAGES.OPTIONS.APPLICATION.PROTOCOL_DESCRIPTION" | translate }}</small>
+     </div>
+     <mat-slide-toggle [checked]="wowupProtocolHandled$ | async" (change)="onProtocolHandlerChange($event, wowupProtocolName)">
+     </mat-slide-toggle>
+     <div class="divider"></div>
+   </div> -->
+-  <!-- RELEASE CHANNEL -->
++  <!-- CURSE PROTOCOL -->
+   <div class="toggle">
+     <div class="row align-items-center">
+       <div class="flex-grow-1">
+         <div>
++          {{ "PAGES.OPTIONS.APPLICATION.CURSE_PROTOCOL_LABEL" | translate }}
++        </div>
++        <small class="text-2">{{ "PAGES.OPTIONS.APPLICATION.CURSE_PROTOCOL_DESCRIPTION" | translate }}</small>
++      </div>
++      <mat-slide-toggle
++        [checked]="curseforgeProtocolHandled$ | async"
++        (change)="onProtocolHandlerChange($event, curseProtocolName)"
++      >
++      </mat-slide-toggle>
++    </div>
++    <div class="divider"></div>
++  </div>
++  <!-- RELEASE CHANNEL -->
++  <div class="toggle">
++    <div class="row align-items-center">
++      <div class="flex-grow-1">
++        <div>
+           {{ "PAGES.OPTIONS.APPLICATION.APP_RELEASE_CHANNEL_LABEL" | translate }}
+         </div>
+         <small class="text-2">{{ "PAGES.OPTIONS.APPLICATION.APP_RELEASE_CHANNEL_DESCRIPTION" | translate }}</small>
+       </div>
+       <mat-form-field class="">
+         <mat-label>{{ "PAGES.OPTIONS.APPLICATION.APP_RELEASE_CHANNEL_DROPDOWN_LABEL" | translate }}</mat-label>
+--- wowup-electron/src/app/components/common/webview/webview.component.ts
++++ wowup-electron/src/app/components/common/webview/webview.component.ts
+@@ -72,17 +72,17 @@
+     // const preload = this.options.preloadFilePath ? `preload="${preloadPath}"` : "";
+     const partition = this.options.partition ?? "memcache";
+ 
+     console.debug("initWebview", this.options);
+ 
+     const placeholder = document.createElement("div");
+-    placeholder.style.width = "100%";
+-    placeholder.style.height = "100%";
++    placeholder.style.width = "400px";
++    placeholder.style.height = "300px";
+ 
+     /* eslint-disable no-irregular-whitespace */
+-    const webview: Electron.WebviewTag = document.createElement("webview");
++    const webview: any = document.createElement("owadview");
+     webview.id = this._id;
+     webview.src = this.options.pageUrl;
+     webview.setAttribute("style", "width: 100%; height: 100%;");
+     webview.nodeintegration = false;
+     webview.nodeintegrationinsubframes = false;
+     webview.plugins = false;
+@@ -119,12 +119,14 @@
+ 
+     placeholder.appendChild(webview);
+     element.nativeElement.appendChild(placeholder);
+   }
+ 
+   private onWebviewReady = () => {
++    console.debug("onWebviewReady", this._tag);
++
+     this._webviewReady = true;
+ 
+     this._sessionService.debugAdFrame$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+       if (!this._tag.isDevToolsOpened()) {
+         this._tag?.openDevTools();
+       }
+--- wowup-electron/src/app/components/common/vertical-tabs/vertical-tabs.component.scss
++++ wowup-electron/src/app/components/common/vertical-tabs/vertical-tabs.component.scss
+@@ -5,13 +5,13 @@
+ }
+ 
+ .tab-strip {
+   box-sizing: border-box;
+   display: flex;
+   flex-direction: column;
+-  max-width: 300px;
++  max-width: 400px;
+   height: 100%;
+   padding-top: calc(1em + 50px);
+ 
+   &.collapsed {
+     .theme-logo {
+       width: 50px;
+@@ -137,15 +137,27 @@
+   width: 150px;
+   background: var(--background-primary);
+   background: radial-gradient(circle, var(--background-primary) 0%, rgba(0, 0, 0, 0) 70%);
+ }
+ 
+ .ad-space {
+-  width: 300px;
++  width: 400px;
+   display: flex;
+   flex-direction: column;
++
++  .addon-info-btn {
++    display: block;
++    width: 100%;
++    text-align: center;
++    line-height: 40px;
++
++    &:hover {
++      border: 2px solid var(--background-primary);
++      box-sizing: border-box;
++    }
++  }
+ 
+   .ad-details {
+     flex-grow: 1;
+ 
+     .center-col {
+       display: flex;
+@@ -154,10 +166,15 @@
+       height: 100%;
+     }
+   }
+ 
+   .ad {
+     flex-shrink: 0;
+-    width: 300px;
+-    height: 250px;
++    width: 400px;
++    height: 300px;
++    background-color: var(--background-secondary-4);
++    background-image: var(--ad-placeholder);
++    background-position: top 32px center;
++    background-repeat: no-repeat;
++    background-size: 55%;
+   }
+ }
+--- wowup-electron/src/app/components/common/vertical-tabs/vertical-tabs.component.html
++++ wowup-electron/src/app/components/common/vertical-tabs/vertical-tabs.component.html
+@@ -125,14 +125,14 @@
+ 
+     <div class="tab-title">{{ "PAGES.HOME.COLLAPSE_BUTTON_TITLE" | translate }}</div>
+   </div>
+ 
+   <!-- AD FRAME -->
+   <div *ngIf="sessionService.adSpace$ | async" class="ad-space text-1 bg-secondary-2">
+-    <div class="tab hover-bg-secondary-4" style="" (click)="onClickAdExplainer()">
++    <div class="tab hover-bg-secondary-4 addon-info-btn" style="" (click)="onClickAdExplainer()">
+       {{ "ADS.AD_EXPLAINER_BUTTON" | translate }}
+     </div>
+     <div class="ad">
+       <app-webview *ngFor="let params of adPageParams$ | async" [options]="params"></app-webview>
+     </div>
+   </div>
+ </div>
+--- wowup-electron/src/app/components/common/consent-dialog/consent-dialog.component.ts
++++ wowup-electron/src/app/components/common/consent-dialog/consent-dialog.component.ts
+@@ -1,9 +1,11 @@
+-import { AfterViewChecked, Component, ElementRef, ViewChild } from "@angular/core";
++import { AfterViewChecked, Component, ElementRef, OnInit, ViewChild } from "@angular/core";
+ import { UntypedFormControl, UntypedFormGroup } from "@angular/forms";
+ import { MatDialogRef } from "@angular/material/dialog";
++import { IPC_OW_IS_CMP_REQUIRED, IPC_OW_OPEN_CMP } from "../../../../common/constants";
++import { ElectronService } from "../../../services";
+ import { AppConfig } from "../../../../environments/environment";
+ import { LinkService } from "../../../services/links/link.service";
+ import { formatDynamicLinks } from "../../../utils/dom.utils";
+ 
+ export interface ConsentDialogResult {
+   telemetry: boolean;
+@@ -12,30 +14,56 @@
+ 
+ @Component({
+   selector: "app-consent-dialog",
+   templateUrl: "./consent-dialog.component.html",
+   styleUrls: ["./consent-dialog.component.scss"],
+ })
+-export class ConsentDialogComponent implements AfterViewChecked {
++export class ConsentDialogComponent implements AfterViewChecked, OnInit {
+   @ViewChild("dialogContent", { read: ElementRef }) public dialogContent!: ElementRef;
+ 
+   public consentOptions: UntypedFormGroup;
++  public requiresCmp = false;
+ 
+   public readonly wagoTermsUrl = AppConfig.wago.termsUrl;
+   public readonly wagoDataUrl = AppConfig.wago.dataConsentUrl;
+ 
+-  public constructor(public dialogRef: MatDialogRef<ConsentDialogComponent>, private _linkService: LinkService) {
++  public constructor(
++    public dialogRef: MatDialogRef<ConsentDialogComponent>,
++    private _linkService: LinkService,
++    private _electronService: ElectronService
++  ) {
+     this.consentOptions = new UntypedFormGroup({
+       telemetry: new UntypedFormControl(true),
+       wagoProvider: new UntypedFormControl(true),
+     });
+   }
+ 
++  public ngOnInit(): void {
++    this._electronService
++      .invoke<boolean>(IPC_OW_IS_CMP_REQUIRED)
++      .then((cmpRequired) => {
++        console.log("cmpRequired", cmpRequired);
++        this.requiresCmp = cmpRequired;
++      })
++      .catch((e) => console.error("IPC_OW_IS_CMP_REQUIRED failed", e));
++  }
+   public ngAfterViewChecked(): void {
+     const descriptionContainer: HTMLDivElement = this.dialogContent?.nativeElement;
+     formatDynamicLinks(descriptionContainer, this.onOpenLink);
++  }
++
++  public onClickAdVendors(evt: MouseEvent): void {
++    evt.preventDefault();
++
++    this._electronService.invoke(IPC_OW_OPEN_CMP, "vendors").catch((e) => console.error("onClickAdVendors failed", e));
++  }
++
++  public onClickManage(evt: MouseEvent): void {
++    evt.preventDefault();
++
++    this._electronService.invoke(IPC_OW_OPEN_CMP).catch((e) => console.error("onClickManage failed", e));
+   }
+ 
+   public onNoClick(): void {
+     this.dialogRef.close();
+   }
+ 
+--- wowup-electron/src/app/components/common/consent-dialog/consent-dialog.component.html
++++ wowup-electron/src/app/components/common/consent-dialog/consent-dialog.component.html
+@@ -7,12 +7,22 @@
+         <mat-slide-toggle formControlName="telemetry">{{
+           "DIALOGS.PERMISSIONS.TELEMETRY.TOGGLE_LABEL" | translate
+         }}</mat-slide-toggle>
+       </div>
+       <mat-hint>{{ "DIALOGS.PERMISSIONS.TELEMETRY.DESCRIPTION" | translate }}</mat-hint>
+     </div>
++    <div *ngIf="requiresCmp" class="mb-3">
++      <h3 class="m-0">{{ "DIALOGS.PERMISSIONS.CURSEFORGE.TITLE" | translate }}</h3>
++      <mat-hint style="max-width: 600px; display: block">
++        <span>{{ "DIALOGS.PERMISSIONS.CURSEFORGE.DESCRIPTION_TOP" | translate }}</span>
++        <a href="#" (click)="onClickAdVendors($event)">{{
++          "DIALOGS.PERMISSIONS.CURSEFORGE.DESCRIPTION_AD_LINK" | translate
++        }}</a>
++        <span>{{ "DIALOGS.PERMISSIONS.CURSEFORGE.DESCRIPTION_BOTTOM" | translate }}</span>
++      </mat-hint>
++    </div>
+     <div>
+       <div>
+         <mat-slide-toggle formControlName="wagoProvider">{{
+           "DIALOGS.PERMISSIONS.WAGO.TOGGLE_LABEL" | translate
+         }}</mat-slide-toggle>
+       </div>
+@@ -22,11 +32,12 @@
+           'DIALOGS.PERMISSIONS.WAGO.DESCRIPTION' | translate: { termsUrl: wagoTermsUrl, dataUrl: wagoDataUrl }
+         "
+       ></mat-hint>
+     </div>
+   </div>
+   <div mat-dialog-actions align="end">
++    <button *ngIf="requiresCmp" mat-raised-button color="primary" type="button" (click)="onClickManage($event)">Manage</button>
+     <button mat-raised-button color="primary" type="submit" cdkFocusInitial>
+       {{ "DIALOGS.PERMISSIONS.POSITIVE_BUTTON" | translate }}
+     </button>
+   </div>
+ </form>
+--- wowup-electron/src/custom-theme.scss
++++ wowup-electron/src/custom-theme.scss
+@@ -251,12 +251,13 @@
+   --divider-color: #666666;
+   --grid-border: rgba(255, 255, 255, 0.12);
+   --footer-hover: #444444;
+ 
+   --title-logo: url("assets/images/wowup-white-1.png");
+   --theme-logo: url("assets/images/wowup-white-1.png");
++  --ad-placeholder: url("assets/images/wowup-placeholder.png");
+ }
+ 
+ .default-theme-light-theme {
+   --background-primary: #6b69d6;
+   --background-primary-2: #504fa1;
+   --background-primary-3: #383773;
+--- wowup-electron/app/ipc-events.ts
++++ wowup-electron/app/ipc-events.ts
+@@ -74,12 +74,15 @@
+   IPC_PUSH_INIT,
+   IPC_PUSH_REGISTER,
+   IPC_PUSH_UNREGISTER,
+   IPC_PUSH_SUBSCRIBE,
+   IPC_WINDOW_IS_FULLSCREEN,
+   IPC_WINDOW_IS_MAXIMIZED,
++  IPC_CURSE_GET_SCAN_RESULTS,
++  IPC_OW_IS_CMP_REQUIRED,
++  IPC_OW_OPEN_CMP,
+   ZOOM_FACTOR_KEY,
+ } from "../src/common/constants";
+ import { CopyFileRequest } from "../src/common/models/copy-file-request";
+ import { DownloadRequest } from "../src/common/models/download-request";
+ import { DownloadStatus } from "../src/common/models/download-status";
+ import { DownloadStatusType } from "../src/common/models/download-status-type";
+@@ -107,12 +110,13 @@
+ import { WowUpFolderScanner } from "./wowup-folder-scanner";
+ import * as push from "./push";
+ import { GetDirectoryTreeRequest } from "../src/common/models/ipc-request";
+ import { ProductDb } from "../src/common/wowup/product-db";
+ import { restoreWindow } from "./window-state";
+ import { firstValueFrom, from, mergeMap, toArray } from "rxjs";
++import { CurseFolderScanner } from "./curse-folder-scanner";
+ import { Addon, AddonScanResult, FsStats } from "wowup-lib-core";
+ 
+ let PENDING_OPEN_URLS: string[] = [];
+ 
+ interface SymlinkDir {
+   original: fs.Dirent;
+@@ -214,12 +218,31 @@
+   handle(IPC_CREATE_DIRECTORY_CHANNEL, async (evt, directoryPath: string): Promise<boolean> => {
+     log.info(`[CreateDirectory] '${directoryPath}'`);
+     await fsp.mkdir(directoryPath, { recursive: true });
+     return true;
+   });
+ 
++  handle(IPC_OW_IS_CMP_REQUIRED, async (): Promise<boolean> => {
++    // NOTE(twolf): Next version of the ow-electron will fix the types
++    try {
++      return await (app as any).overwolf.isCMPRequired();
++    } catch (e) {
++      console.error("IPC_OW_IS_CMP_REQUIRED failed", e);
++      return false;
++    }
++  });
++
++  handle(IPC_OW_OPEN_CMP, (evt, cmpTab?: string) => {
++    const options = {} as any;
++    if (cmpTab) {
++      options.tab = cmpTab;
++    }
++
++    (app as any).overwolf.openCMPWindow(options);
++  });
++
+   handle(IPC_GET_ZOOM_FACTOR, () => {
+     return window?.webContents?.getZoomFactor();
+   });
+ 
+   handle(IPC_UPDATE_APP_BADGE, (evt, count: number) => {
+     return app.setBadgeCount(count);
+@@ -373,12 +396,29 @@
+       return false;
+     }
+ 
+     return true;
+   });
+ 
++  handle(IPC_CURSE_GET_SCAN_RESULTS, async (evt, filePaths: string[]): Promise<AddonScanResult[]> => {
++    // Scan addon folders in parallel for speed!?
++    try {
++      const taskResults = await firstValueFrom(
++        from(filePaths).pipe(
++          mergeMap((folder) => from(new CurseFolderScanner().scanFolder(folder)), 2),
++          toArray()
++        )
++      );
++
++      return taskResults;
++    } catch (e) {
++      log.error("Failed during curse scan", e);
++      throw e;
++    }
++  });
++
+   handle(IPC_WOWUP_GET_SCAN_RESULTS, async (evt, filePaths: string[]): Promise<AddonScanResult[]> => {
+     const taskResults = await firstValueFrom(
+       from(filePaths).pipe(
+         mergeMap((folder) => from(new WowUpFolderScanner(folder).scanFolder()), 3),
+         toArray()
+       )
+--- wowup-electron/.vscode/launch.json
++++ wowup-electron/.vscode/launch.json
+@@ -29,22 +29,22 @@
+     {
+       "name": "Main",
+       "type": "node",
+       "request": "launch",
+       "protocol": "inspector",
+       "cwd": "${workspaceFolder}",
+-      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
++      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ow-electron",
+       "trace": "verbose",
+-      "runtimeArgs": ["--serve", ".", "--remote-debugging-port=9876"],
++      "runtimeArgs": ["--force-cmp", "--serve", ".", "--remote-debugging-port=9876"],
+       "windows": {
+-        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
++        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ow-electron.cmd"
+       },
+       "preLaunchTask": "Build.Main"
+     }
+   ],
+   "compounds": [
+     {
+       "name": "Application Debug",
+       "configurations": ["Renderer", "Main"]
+     }
+   ]
+ }
+--- wowup-electron/package-lock.json
++++ wowup-electron/package-lock.json
+@@ -57,12 +57,14 @@
+         "@fortawesome/free-regular-svg-icons": "6.2.0",
+         "@fortawesome/free-solid-svg-icons": "6.2.0",
+         "@messageformat/core": "3.0.1",
+         "@microsoft/applicationinsights-web": "2.8.9",
+         "@ngx-translate/core": "14.0.0",
+         "@ngx-translate/http-loader": "7.0.0",
++        "@overwolf/ow-electron": "19.1.8-1",
++        "@overwolf/ow-electron-builder": "23.6.0",
+         "@types/adm-zip": "0.5.0",
+         "@types/archiver": "5.3.1",
+         "@types/flat": "5.0.2",
+         "@types/globrex": "0.1.2",
+         "@types/jasmine": "4.3.0",
+         "@types/jasminewd2": "2.0.10",
+@@ -80,25 +82,26 @@
+         "@typescript-eslint/parser": "5.42.1",
+         "ag-grid-angular": "28.2.1",
+         "ag-grid-community": "28.2.1",
+         "chai": "4.3.7",
+         "core-js": "3.21.1",
+         "cross-env": "7.0.3",
++        "curseforge-v2": "1.2.0",
+         "del": "7.0.0",
+         "dotenv": "16.0.3",
+-        "electron": "21.3.1",
+         "electron-builder": "23.6.0",
+         "electron-notarize": "1.2.2",
+         "electron-reload": "2.0.0-alpha.1",
+         "eslint": "8.28.0",
+         "eslint-config-prettier": "8.5.0",
+         "eslint-plugin-import": "2.26.0",
+         "eslint-plugin-jsdoc": "39.6.4",
+         "eslint-plugin-prefer-arrow": "1.2.3",
+         "flat": "5.0.2",
+         "gulp": "4.0.2",
++        "gulp-run": "1.7.1",
+         "i18next-json-sync": "3.1.1",
+         "ignore": "5.2.1",
+         "jasmine-core": "4.4.0",
+         "jasmine-spec-reporter": "7.0.0",
+         "karma": "6.4.1",
+         "karma-coverage-istanbul-reporter": "3.0.3",
+--- wowup-electron/package.json
++++ wowup-electron/package.json
+@@ -15,34 +15,36 @@
+   "author": {
+     "name": "Jliddev",
+     "email": "jliddev@gmail.com"
+   },
+   "main": "app/main.js",
+   "scripts": {
+-    "postinstall": "electron-builder install-app-deps",
++    "postinstall": "ow-electron-builder install-app-deps",
+     "install:prod": "npm ci --only=prod --no-optional",
+     "ng": "ng",
+-    "start": "npm-run-all -p electron:serve ng:serve",
++    "start": "npm-run-all -p ow-electron:serve ng:serve",
+     "build": "npm run electron:serve-tsc && ng build --base-href ./",
+     "build:dev": "npm run build -- -c dev",
+     "build:prod": "npm run build -- -c production",
+     "ng:serve": "ng serve",
+     "ng:serve:web": "ng serve -c web -o",
+     "electron:serve-tsc": "tsc -p tsconfig.serve.json",
+-    "electron:serve": "wait-on tcp:4200 && npm run electron:serve-tsc && npx electron . --serve",
+-    "electron:local": "npm run build:prod && npx electron .",
+-    "electron:build": "npm run build:prod && electron-builder build",
+-    "electron:build:local": "npm run build:prod && electron-builder build -c electron-builder-local.json",
+-    "electron:publish": "npm run lint && npm run build:prod && electron-builder build --publish always",
++    "electron:serve": "wait-on tcp:4200 && npm run ow-electron:serve-tsc && npx ow-electron . --serve",
++    "electron:local": "npm run build:prod && npx ow-electron .",
++    "electron:build": "npm run build:prod && ow-electron-builder build",
++    "electron:build:local": "npm run build:prod && ow-electron-builder build -c electron-builder-local.json",
++    "electron:publish": "npm run lint && npm run build:prod && ow-electron-builder build --publish always",
++    "electron:publish:vanilla": "npm run lint && npm run build:prod && electron-builder build --publish always",
+     "electron:publish:linux": "docker-compose -f linux-compose.yml up",
+-    "electron:publish:never": "npm run electron:build && electron-builder --publish never",
+-    "electron:publish:never:local": "npm run build:dev && npx electron-builder -c electron-builder-local.json --publish never ",
++    "electron:publish:never": "npm run electron:build && ow-electron-builder --publish never",
++    "electron:publish:never:local": "npm run build:dev && npx ow-electron-builder -c electron-builder-local.json --publish never",
++    "electron:publish:never:t": "ow-electron-builder -c ow-electron-builder-local.json --publish never",
+     "test": "ng test --watch=false",
+     "test:watch": "ng test",
+     "test:locales": "ng test --watch=false --include='src/locales.spec.ts'",
+-    "test:customprotocol:": "npx electron . \"curseforge://install?addonId=3358^^^&fileId=3240590\"",
++    "test:customprotocol:": "npx ow-electron . \"curseforge://install?addonId=14154&fileId=4073235\"",
+     "e2e": "npm run build:prod && cross-env TS_NODE_PROJECT='e2e/tsconfig.e2e.json' mocha --timeout 300000 --require ts-node/register e2e/**/*.e2e.ts",
+     "version": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md",
+     "lint": "ng lint",
+     "i18n": "sync-i18n --files ./src/assets/i18n/*.json --primary en --space 2 --finalnewline --lineendings CRLF --languages cs de es fr it nb pt ru zh zh-TW ko pl",
+     "check-i18n": "npm run i18n -- --check",
+     "pretty": "npx prettier --write . && ng lint --fix",
+@@ -103,12 +105,14 @@
+     "@fortawesome/free-regular-svg-icons": "6.2.0",
+     "@fortawesome/free-solid-svg-icons": "6.2.0",
+     "@messageformat/core": "3.0.1",
+     "@microsoft/applicationinsights-web": "2.8.9",
+     "@ngx-translate/core": "14.0.0",
+     "@ngx-translate/http-loader": "7.0.0",
++    "@overwolf/ow-electron": "19.1.8-1",
++    "@overwolf/ow-electron-builder": "23.6.0",
+     "@types/adm-zip": "0.5.0",
+     "@types/archiver": "5.3.1",
+     "@types/flat": "5.0.2",
+     "@types/globrex": "0.1.2",
+     "@types/jasmine": "4.3.0",
+     "@types/jasminewd2": "2.0.10",
+@@ -126,25 +130,26 @@
+     "@typescript-eslint/parser": "5.42.1",
+     "ag-grid-angular": "28.2.1",
+     "ag-grid-community": "28.2.1",
+     "chai": "4.3.7",
+     "core-js": "3.21.1",
+     "cross-env": "7.0.3",
++    "curseforge-v2": "1.2.0",
+     "del": "7.0.0",
+     "dotenv": "16.0.3",
+-    "electron": "21.3.1",
+     "electron-builder": "23.6.0",
+     "electron-notarize": "1.2.2",
+     "electron-reload": "2.0.0-alpha.1",
+     "eslint": "8.28.0",
+     "eslint-config-prettier": "8.5.0",
+     "eslint-plugin-import": "2.26.0",
+     "eslint-plugin-jsdoc": "39.6.4",
+     "eslint-plugin-prefer-arrow": "1.2.3",
+     "flat": "5.0.2",
+     "gulp": "4.0.2",
++    "gulp-run": "1.7.1",
+     "i18next-json-sync": "3.1.1",
+     "ignore": "5.2.1",
+     "jasmine-core": "4.4.0",
+     "jasmine-spec-reporter": "7.0.0",
+     "karma": "6.4.1",
+     "karma-coverage-istanbul-reporter": "3.0.3",
+--- wowup-electron/gulpfile.js
++++ wowup-electron/gulpfile.js
+@@ -1,8 +1,12 @@
++require("dotenv").config();
++
+ const gulp = require("gulp");
+ const del = require("del");
++const fs = require("fs/promises");
++const path = require("path");
+ const { spawn } = require("child_process");
+ 
+ function defaultTask(cb) {
+   // place code for your default task here
+   cb();
+ }
+@@ -50,18 +54,39 @@
+ function npmRun(cmd) {
+   return function npmRunCmd(cb) {
+     npmRunTask(cb, cmd);
+   };
+ }
+ 
++async function updateCfKey() {
++  const cfApiKey = process.env.CURSEFORGE_API_KEY;
++  console.log(cfApiKey);
++  if (typeof cfApiKey !== "string" || cfApiKey.length === 0) {
++    throw new Error("CURSEFORGE_API_KEY missing");
++  }
++
++  const envPath = "src/environments";
++  const environments = await fs.readdir(envPath);
++
++  for (let env of environments) {
++    const filePath = path.join(envPath, env);
++    let envData = await fs.readFile(filePath, { encoding: "utf-8" });
++    envData = envData.replace("{{CURSEFORGE_API_KEY}}", cfApiKey);
++
++    await fs.writeFile(filePath, envData);
++    console.log(envData);
++  }
++}
++
+ const prePackageTasks = [
+   npmRun("lint"),
+   npmRun("build:prod"),
+   prePackageTask,
+   prePackageCopyTask,
+   packageChDir,
+   npmRun("install:prod"),
+ ];
+ 
+ exports.default = defaultTask;
+ exports.package = gulp.series(...prePackageTasks, npmRun("electron:publish"));
++exports.packageCfLocal = gulp.series(updateCfKey, npmRun("electron:publish:never:local"));
+ exports.packageLocal = gulp.series(...prePackageTasks, npmRun("electron:publish:never:local"));
+--- .github/workflows/electron-windows-build.yml
++++ .github/workflows/electron-windows-build.yml
+@@ -35,16 +35,23 @@
+ 
+       - name: Use Node.js ${{ matrix.node-version }}
+         uses: actions/setup-node@v2
+         with:
+           node-version: ${{ matrix.node-version }}
+ 
++      - name: Inject Token
++        env:
++          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
++        run: |
++          cd ./wowup-electron
++          node ./inject-token.js
++          
+       - name: Install Angular CLI
+         run: npm install -g @angular/cli
+ 
+       - name: Build Windows App
+         if: matrix.os == 'windows-latest'
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+           CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+         run: cd ./wowup-electron && npm ci && npm run electron:publish
+--- .github/workflows/electron-mac-build.yml
++++ .github/workflows/electron-mac-build.yml
+@@ -35,12 +35,19 @@
+ 
+       - name: Use Node.js ${{ matrix.node-version }}
+         uses: actions/setup-node@v2
+         with:
+           node-version: ${{ matrix.node-version }}
+ 
++      - name: Inject Token
++        env:
++          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
++        run: |
++          cd ./wowup-electron
++          node ./inject-token.js
++
+       - name: Install Angular CLI
+         run: npm install -g @angular/cli
+ 
+       - name: dmg-license
+         run: |
+           cd ./wowup-electron
+@@ -54,7 +61,7 @@
+           NOTARIZE_APPLE_ID: ${{ secrets.NOTARIZE_APPLE_ID }}
+           NOTARIZE_APPLE_PASSWORD: ${{ secrets.NOTARIZE_APPLE_PASSWORD }}
+           NOTARIZE_APPLE_TEAM_ID: ${{ secrets.NOTARIZE_APPLE_TEAM_ID }}
+         run: |
+           cd ./wowup-electron
+           npm i
+-          npm run electron:publish
++          npm run electron:publish:vanilla
+--- .github/workflows/electron-linux-build.yml
++++ .github/workflows/electron-linux-build.yml
+@@ -39,17 +39,24 @@
+           node-version: ${{ matrix.node-version }}
+ 
+       - name: Setup Flatpak
+         if: matrix.os == 'ubuntu-latest'
+         run: sudo apt install flatpak flatpak-builder
+ 
++      - name: Inject Token
++        env:
++          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
++        run: |
++          cd ./wowup-electron
++          node ./inject-token.js
++
+       - name: Install Angular CLI
+         run: npm install -g @angular/cli
+ 
+       - name: Build Linux App
+         if: matrix.os == 'ubuntu-latest'
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+         run: |
+           cd ./wowup-electron
+           npm i
+-          npm run electron:publish
++          npm run electron:publish:vanilla
+--- .github/workflows/electron-all-build.yml
++++ .github/workflows/electron-all-build.yml
+@@ -35,12 +35,19 @@
+ 
+       - name: Use Node.js ${{ matrix.node-version }}
+         uses: actions/setup-node@v2
+         with:
+           node-version: ${{ matrix.node-version }}
+ 
++      - name: Inject Token
++        env:
++          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
++        run: |
++          cd ./wowup-electron
++          node ./inject-token.js
++
+       - name: Install Angular CLI
+         run: npm install -g @angular/cli
+ 
+       - name: dmg-license
+         if: matrix.os == 'macos-11'
+         run: |
+@@ -51,13 +58,13 @@
+         if: matrix.os == 'ubuntu-latest'
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+         run: |
+           cd ./wowup-electron
+           npm i
+-          npm run electron:publish
++          npm run electron:publish:vanilla
+ 
+       - name: Build Mac App
+         if: matrix.os == 'macos-11'
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+           CSC_LINK: ${{ secrets.MACOS_CERT }}
+@@ -65,15 +72,15 @@
+           NOTARIZE_APPLE_ID: ${{ secrets.NOTARIZE_APPLE_ID }}
+           NOTARIZE_APPLE_PASSWORD: ${{ secrets.NOTARIZE_APPLE_PASSWORD }}
+           NOTARIZE_APPLE_TEAM_ID: ${{ secrets.NOTARIZE_APPLE_TEAM_ID }}
+         run: |
+           cd ./wowup-electron
+           npm i
+-          npm run electron:publish
++          npm run electron:publish:vanilla
+ 
+       - name: Build Windows App
+         if: matrix.os == 'windows-latest'
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+           CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+         run: cd ./wowup-electron && npm i && npm run electron:publish
