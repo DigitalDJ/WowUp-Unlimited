@@ -55,7 +55,7 @@
          }),
          catchError((e) => {
            console.error("[wago] failed to load secret key", e);
-@@ -758,6 +765,28 @@
+@@ -763,6 +770,28 @@
      }
    }
  

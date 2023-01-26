@@ -1235,20 +1235,16 @@
          "AUTO_UPDATE_LABEL": "Automatické aktualizace",
 --- wowup-electron/src/app/services/wowup/patch-notes.service.ts
 +++ wowup-electron/src/app/services/wowup/patch-notes.service.ts
-@@ -15,27 +15,33 @@
- }
- 
- const CHANGELOGS: ChangeLog[] = [
+@@ -27,7 +27,7 @@
    {
      Version: "2.9.2",
      html: `
--    <h4 style="margin-top: 1em;">Changes</h4>
+-    <h4>New Features</h4>
 +    <h4 style="margin-top: 1em;">New Features</h4>
      <ul>
      <li>Dynamic WoW client names (CyanoHao)</li>
-+    </ul>
-+    <h4 style="margin-top: 1em;">Changes</h4>
-+    <ul>
+     </ul>
+@@ -36,6 +36,7 @@
      <li>Spanish locale updates (SkollVargr)</li>
      <li>Norwegian locale updates (espenja)</li>
      <li>German locale updates (maestrohdude)</li>
@@ -1256,7 +1252,7 @@
      <li>Improved WowInterface API usage for some addons</li>
      <li>Improved private GitHub repo support</li>
      <li>Disable the ability to shift + click columns</li>
-     <li>Update a bunch of dependencies</li>
+@@ -43,8 +44,10 @@
      </ul>
      <h4 style="margin-top: 1em;">Fixes</h4>
      <ul>
@@ -1267,13 +1263,7 @@
      <li>Audio should now be muted just in case of an annoying ad</li>
      <li>Fix an issue with window not showing at startup on Mac</li>
      <li>Improve some error handling when installing addons</li>
-     </ul>
-     `,
-   },
-@@ -43,15 +49,18 @@
-     Version: "2.9.1",
-     html: `
-     <h4 style="margin-top: 1em;">New Features</h4>
+@@ -58,9 +61,12 @@
      <ul>
      <li>Added support for custom Wago API keys (Linaori)</li>
      <li>Added support Dragonflight</li>
@@ -1286,9 +1276,6 @@
      <li>Attempt to fix the weird diagonal line bug</li>
      <li>Fix issues with 10.x interface version detection/sorting</li>
      <li>Update a bunch of dependencies</li>
-     </ul>
-     `,
-   },
 --- wowup-electron/src/app/services/addons/addon-fingerprint.service.ts
 +++ wowup-electron/src/app/services/addons/addon-fingerprint.service.ts
 @@ -1,9 +1,9 @@
