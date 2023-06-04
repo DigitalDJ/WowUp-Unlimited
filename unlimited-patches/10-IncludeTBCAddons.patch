@@ -27,7 +27,7 @@
  
  export class CurseAddonProvider extends AddonProvider {
    private readonly _circuitBreaker: CircuitBreakerWrapper;
-@@ -452,13 +458,13 @@
+@@ -458,13 +458,13 @@
    private getGameVersionTypeId(clientType: WowClientType): number {
      const gameType = GAME_TYPE_LISTS.find((gtl) => gtl.matches.includes(clientType));
      if (!gameType) {
@@ -39,10 +39,10 @@
    }
  
    private hasSortableGameVersion(file: cfv2.CF2File, typeId: number): boolean {
-     if (!file.sortableGameVersions) {
+     if (!file?.sortableGameVersions) {
        console.debug("sortableGameVersions missing", file);
      }
-@@ -764,13 +770,13 @@
+@@ -770,13 +770,13 @@
      }
    }
  

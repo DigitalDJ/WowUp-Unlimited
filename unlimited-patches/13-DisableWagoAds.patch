@@ -86,7 +86,7 @@
      if (!this.isValidToken(token)) {
 --- wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
 +++ wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
-@@ -202,8 +202,6 @@
+@@ -200,8 +200,6 @@
        return;
      }
  

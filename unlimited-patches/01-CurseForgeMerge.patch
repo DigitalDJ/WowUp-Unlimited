@@ -995,7 +995,7 @@
    "APP": {
      "APP_MENU": {
        "EDIT": {
-@@ -309,12 +309,19 @@
+@@ -309,14 +309,21 @@
        "TITLE": "Install Addon URL"
      },
      "NEW_VERSION_POPUP": {
@@ -1010,11 +1010,14 @@
 +        "TITLE": "CurseForge"
 +      },
        "MESSAGE": "Before we get started we need to setup a few permissions for the app.",
-       "POSITIVE_BUTTON": "Confirm",
+-      "POSITIVE_BUTTON": "Confirm",
++      "POSITIVE_BUTTON": "Accept & Continue",
        "TELEMETRY": {
          "DESCRIPTION": "Help improve WowUp by sending anonymous app install data and/or errors?",
          "TOGGLE_LABEL": "Allow Telemetry"
        },
+       "TITLE": "WowUp Permissions Setup",
+       "WAGO": {
 @@ -511,12 +518,14 @@
          "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Setting the app release channel",
          "APP_RELEASE_CHANNEL_CONFIRMATION_POSITIVE_BUTTON": "Yes, I understand",
@@ -1235,16 +1238,10 @@
          "AUTO_UPDATE_LABEL": "Automatické aktualizace",
 --- wowup-electron/src/app/services/wowup/patch-notes.service.ts
 +++ wowup-electron/src/app/services/wowup/patch-notes.service.ts
-@@ -27,7 +27,7 @@
-   {
-     Version: "2.9.2",
-     html: `
--    <h4>New Features</h4>
-+    <h4 style="margin-top: 1em;">New Features</h4>
-     <ul>
-     <li>Dynamic WoW client names (CyanoHao)</li>
+@@ -42,37 +42,43 @@
      </ul>
-@@ -36,6 +36,7 @@
+     <h4 style="margin-top: 1em;">Changes</h4>
+     <ul>
      <li>Spanish locale updates (SkollVargr)</li>
      <li>Norwegian locale updates (espenja)</li>
      <li>German locale updates (maestrohdude)</li>
@@ -1252,7 +1249,7 @@
      <li>Improved WowInterface API usage for some addons</li>
      <li>Improved private GitHub repo support</li>
      <li>Disable the ability to shift + click columns</li>
-@@ -43,8 +44,10 @@
+     <li>Update a bunch of dependencies</li>
      </ul>
      <h4 style="margin-top: 1em;">Fixes</h4>
      <ul>
@@ -1263,12 +1260,18 @@
      <li>Audio should now be muted just in case of an annoying ad</li>
      <li>Fix an issue with window not showing at startup on Mac</li>
      <li>Improve some error handling when installing addons</li>
-@@ -58,9 +61,12 @@
+     </ul>
+     `,
+   },
+   {
+     Version: "2.9.1",
+     html: `
+     <h4 style="margin-top: 1em;">New Features</h4>
      <ul>
-     <li>Added support for custom Wago API keys (Linaori)</li>
-     <li>Added support Dragonflight</li>
 +    <li>Added support for CurseForge API</li>
 +    <li>Added support handling CurseForge protocol</li>
+     <li>Added support for custom Wago API keys (Linaori)</li>
+     <li>Added support Dragonflight</li>
      </ul>
      <h4 style="margin-top: 1em;">Changes</h4>
      <ul>
@@ -1276,6 +1279,26 @@
      <li>Attempt to fix the weird diagonal line bug</li>
      <li>Fix issues with 10.x interface version detection/sorting</li>
      <li>Update a bunch of dependencies</li>
+     </ul>
+     `,
+   },
+--- wowup-electron/src/app/services/links/link.service.ts
++++ wowup-electron/src/app/services/links/link.service.ts
+@@ -63,13 +63,13 @@
+       },
+     });
+ 
+     return dialogRef.afterClosed().pipe(
+       first(),
+       switchMap((result: DialogResult) => {
+-        if (!result.success) {
++        if (result === undefined || !result.success) {
+           return of(undefined);
+         }
+ 
+         if (result.trustDomain !== "") {
+           return from(this._wowUpService.trustDomain(result.trustDomain)).pipe(
+             switchMap(() => from(this.openExternalLink(href)))
 --- wowup-electron/src/app/services/addons/addon-fingerprint.service.ts
 +++ wowup-electron/src/app/services/addons/addon-fingerprint.service.ts
 @@ -1,9 +1,9 @@
@@ -1499,7 +1522,7 @@
 +import { catchError, filter, first, map, switchMap, takeUntil, tap } from "rxjs/operators";
  
  import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from "@angular/core";
- import { MatSnackBar } from "@angular/material/snack-bar";
+ import { MatLegacySnackBar as MatSnackBar } from "@angular/material/legacy-snack-bar";
  import { TranslateService } from "@ngx-translate/core";
  
  import {
@@ -1781,7 +1804,7 @@
  
      .center-col {
        display: flex;
-@@ -154,10 +166,15 @@
+@@ -154,15 +166,15 @@
        height: 100%;
      }
    }
@@ -1792,11 +1815,11 @@
 -    height: 250px;
 +    width: 400px;
 +    height: 300px;
-+    background-color: var(--background-secondary-4);
-+    background-image: var(--ad-placeholder);
-+    background-position: top 32px center;
-+    background-repeat: no-repeat;
-+    background-size: 55%;
+     background-color: var(--background-secondary-4);
+     background-image: var(--ad-placeholder);
+     background-position: top 32px center;
+     background-repeat: no-repeat;
+     background-size: 55%;
    }
  }
 --- wowup-electron/src/app/components/common/vertical-tabs/vertical-tabs.component.html
@@ -1823,7 +1846,7 @@
 -import { AfterViewChecked, Component, ElementRef, ViewChild } from "@angular/core";
 +import { AfterViewChecked, Component, ElementRef, OnInit, ViewChild } from "@angular/core";
  import { UntypedFormControl, UntypedFormGroup } from "@angular/forms";
- import { MatDialogRef } from "@angular/material/dialog";
+ import { MatLegacyDialogRef as MatDialogRef } from "@angular/material/legacy-dialog";
 +import { IPC_OW_IS_CMP_REQUIRED, IPC_OW_OPEN_CMP } from "../../../../common/constants";
 +import { ElectronService } from "../../../services";
  import { AppConfig } from "../../../../environments/environment";
@@ -1832,7 +1855,7 @@
  
  export interface ConsentDialogResult {
    telemetry: boolean;
-@@ -12,30 +14,56 @@
+@@ -12,30 +14,57 @@
  
  @Component({
    selector: "app-consent-dialog",
@@ -1870,6 +1893,7 @@
 +      })
 +      .catch((e) => console.error("IPC_OW_IS_CMP_REQUIRED failed", e));
 +  }
++
    public ngAfterViewChecked(): void {
      const descriptionContainer: HTMLDivElement = this.dialogContent?.nativeElement;
      formatDynamicLinks(descriptionContainer, this.onOpenLink);
@@ -1929,22 +1953,63 @@
      </button>
    </div>
  </form>
---- wowup-electron/src/custom-theme.scss
-+++ wowup-electron/src/custom-theme.scss
-@@ -251,12 +251,13 @@
-   --divider-color: #666666;
-   --grid-border: rgba(255, 255, 255, 0.12);
-   --footer-hover: #444444;
+--- wowup-electron/src/app/app.component.ts
++++ wowup-electron/src/app/app.component.ts
+@@ -233,13 +233,13 @@
+       }
+     });
+   }
  
-   --title-logo: url("assets/images/wowup-white-1.png");
-   --theme-logo: url("assets/images/wowup-white-1.png");
-+  --ad-placeholder: url("assets/images/wowup-placeholder.png");
- }
+   private async loadZoom() {
+     const zoomPref = await this._preferenceStore.getAsync(ZOOM_FACTOR_KEY);
+-    console.log('zoomPref', zoomPref)
++    console.log("zoomPref", zoomPref);
+     const zoomFactor = parseFloat(zoomPref);
+     if (!isNaN(zoomFactor) && isFinite(zoomFactor)) {
+       this._zoomService.setZoomFactor(zoomFactor).catch((e) => console.error(e));
+     }
+   }
  
- .default-theme-light-theme {
-   --background-primary: #6b69d6;
-   --background-primary-2: #504fa1;
-   --background-primary-3: #383773;
+--- wowup-electron/app/main.ts
++++ wowup-electron/app/main.ts
+@@ -341,12 +341,16 @@
+     webContents.session.setUserAgent(webContents.userAgent);
+ 
+     webContents.on("preload-error", (evt, path, e) => {
+       log.error("[webview] preload-error", e.message);
+     });
+ 
++    webContents.on("did-fail-provisional-load", (evt) => {
++      log.error("[webview] did-fail-provisional-load", evt);
++    });
++
+     webContents.session.setPermissionRequestHandler((contents, permission, callback) => {
+       log.warn("[webview] setPermissionRequestHandler", permission);
+       return callback(false);
+     });
+ 
+     webContents.session.setPermissionCheckHandler((contents, permission, origin) => {
+@@ -360,12 +364,20 @@
+ 
+     webContents.on("did-start-navigation", (evt, url) => {
+       if (url === "https://addons.wago.io/wowup_ad") {
+         log.debug("[webview] did-start-navigation", url);
+         wagoHandler.initializeWebContents(webContents);
+       }
++    });
++
++    // webview allowpopups must be enabled for any link to work
++    // https://www.electronjs.org/docs/latest/api/webview-tag#allowpopups
++    webContents.setWindowOpenHandler((details) => {
++      log.debug("[webview] setWindowOpenHandler");
++      win?.webContents.send("webview-new-window", details); // forward this new window to the app for processing
++      return { action: "deny" };
+     });
+   });
+ 
+   win.webContents.on("zoom-changed", (zoomDirection) => {
+     win?.webContents?.send("zoom-changed", zoomDirection);
+   });
 --- wowup-electron/app/ipc-events.ts
 +++ wowup-electron/app/ipc-events.ts
 @@ -74,12 +74,15 @@
@@ -2070,45 +2135,45 @@
 --- wowup-electron/package-lock.json
 +++ wowup-electron/package-lock.json
 @@ -57,12 +57,14 @@
-         "@fortawesome/free-regular-svg-icons": "6.2.0",
-         "@fortawesome/free-solid-svg-icons": "6.2.0",
+         "@fortawesome/free-regular-svg-icons": "6.3.0",
+         "@fortawesome/free-solid-svg-icons": "6.3.0",
          "@messageformat/core": "3.0.1",
-         "@microsoft/applicationinsights-web": "2.8.9",
+         "@microsoft/applicationinsights-web": "2.8.10",
          "@ngx-translate/core": "14.0.0",
          "@ngx-translate/http-loader": "7.0.0",
-+        "@overwolf/ow-electron": "19.1.8-1",
++        "@overwolf/ow-electron": "22.3.3",
 +        "@overwolf/ow-electron-builder": "23.6.0",
          "@types/adm-zip": "0.5.0",
          "@types/archiver": "5.3.1",
          "@types/flat": "5.0.2",
          "@types/globrex": "0.1.2",
-         "@types/jasmine": "4.3.0",
+         "@types/jasmine": "4.3.1",
          "@types/jasminewd2": "2.0.10",
 @@ -80,25 +82,26 @@
-         "@typescript-eslint/parser": "5.42.1",
-         "ag-grid-angular": "28.2.1",
-         "ag-grid-community": "28.2.1",
+         "@typescript-eslint/parser": "5.54.0",
+         "ag-grid-angular": "29.2.0",
+         "ag-grid-community": "29.2.0",
          "chai": "4.3.7",
          "core-js": "3.21.1",
          "cross-env": "7.0.3",
 +        "curseforge-v2": "1.2.0",
          "del": "7.0.0",
          "dotenv": "16.0.3",
--        "electron": "21.3.1",
+-        "electron": "24.4.0",
          "electron-builder": "23.6.0",
          "electron-notarize": "1.2.2",
          "electron-reload": "2.0.0-alpha.1",
-         "eslint": "8.28.0",
-         "eslint-config-prettier": "8.5.0",
-         "eslint-plugin-import": "2.26.0",
-         "eslint-plugin-jsdoc": "39.6.4",
+         "eslint": "8.34.0",
+         "eslint-config-prettier": "8.6.0",
+         "eslint-plugin-import": "2.27.5",
+         "eslint-plugin-jsdoc": "40.0.0",
          "eslint-plugin-prefer-arrow": "1.2.3",
          "flat": "5.0.2",
          "gulp": "4.0.2",
 +        "gulp-run": "1.7.1",
-         "i18next-json-sync": "3.1.1",
-         "ignore": "5.2.1",
-         "jasmine-core": "4.4.0",
+         "i18next-json-sync": "3.1.2",
+         "ignore": "5.2.4",
+         "jasmine-core": "4.5.0",
          "jasmine-spec-reporter": "7.0.0",
          "karma": "6.4.1",
          "karma-coverage-istanbul-reporter": "3.0.3",
@@ -2116,8 +2181,8 @@
 +++ wowup-electron/package.json
 @@ -15,34 +15,36 @@
    "author": {
-     "name": "Jliddev",
-     "email": "jliddev@gmail.com"
+     "name": "WowUp LLC",
+     "email": "zakrn@wowup.io"
    },
    "main": "app/main.js",
    "scripts": {
@@ -2162,45 +2227,45 @@
      "check-i18n": "npm run i18n -- --check",
      "pretty": "npx prettier --write . && ng lint --fix",
 @@ -103,12 +105,14 @@
-     "@fortawesome/free-regular-svg-icons": "6.2.0",
-     "@fortawesome/free-solid-svg-icons": "6.2.0",
+     "@fortawesome/free-regular-svg-icons": "6.3.0",
+     "@fortawesome/free-solid-svg-icons": "6.3.0",
      "@messageformat/core": "3.0.1",
-     "@microsoft/applicationinsights-web": "2.8.9",
+     "@microsoft/applicationinsights-web": "2.8.10",
      "@ngx-translate/core": "14.0.0",
      "@ngx-translate/http-loader": "7.0.0",
-+    "@overwolf/ow-electron": "19.1.8-1",
++    "@overwolf/ow-electron": "22.3.3",
 +    "@overwolf/ow-electron-builder": "23.6.0",
      "@types/adm-zip": "0.5.0",
      "@types/archiver": "5.3.1",
      "@types/flat": "5.0.2",
      "@types/globrex": "0.1.2",
-     "@types/jasmine": "4.3.0",
+     "@types/jasmine": "4.3.1",
      "@types/jasminewd2": "2.0.10",
 @@ -126,25 +130,26 @@
-     "@typescript-eslint/parser": "5.42.1",
-     "ag-grid-angular": "28.2.1",
-     "ag-grid-community": "28.2.1",
+     "@typescript-eslint/parser": "5.54.0",
+     "ag-grid-angular": "29.2.0",
+     "ag-grid-community": "29.2.0",
      "chai": "4.3.7",
      "core-js": "3.21.1",
      "cross-env": "7.0.3",
 +    "curseforge-v2": "1.2.0",
      "del": "7.0.0",
      "dotenv": "16.0.3",
--    "electron": "21.3.1",
+-    "electron": "24.4.0",
      "electron-builder": "23.6.0",
      "electron-notarize": "1.2.2",
      "electron-reload": "2.0.0-alpha.1",
-     "eslint": "8.28.0",
-     "eslint-config-prettier": "8.5.0",
-     "eslint-plugin-import": "2.26.0",
-     "eslint-plugin-jsdoc": "39.6.4",
+     "eslint": "8.34.0",
+     "eslint-config-prettier": "8.6.0",
+     "eslint-plugin-import": "2.27.5",
+     "eslint-plugin-jsdoc": "40.0.0",
      "eslint-plugin-prefer-arrow": "1.2.3",
      "flat": "5.0.2",
      "gulp": "4.0.2",
 +    "gulp-run": "1.7.1",
-     "i18next-json-sync": "3.1.1",
-     "ignore": "5.2.1",
-     "jasmine-core": "4.4.0",
+     "i18next-json-sync": "3.1.2",
+     "ignore": "5.2.4",
+     "jasmine-core": "4.5.0",
      "jasmine-spec-reporter": "7.0.0",
      "karma": "6.4.1",
      "karma-coverage-istanbul-reporter": "3.0.3",
@@ -2257,8 +2322,8 @@
  
  exports.default = defaultTask;
  exports.package = gulp.series(...prePackageTasks, npmRun("electron:publish"));
-+exports.packageCfLocal = gulp.series(updateCfKey, npmRun("electron:publish:never:local"));
  exports.packageLocal = gulp.series(...prePackageTasks, npmRun("electron:publish:never:local"));
++exports.packageCfLocal = gulp.series(updateCfKey, npmRun("electron:publish:never:local"));
 --- .github/workflows/electron-windows-build.yml
 +++ .github/workflows/electron-windows-build.yml
 @@ -35,16 +35,23 @@

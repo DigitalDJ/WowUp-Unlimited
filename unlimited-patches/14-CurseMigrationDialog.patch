@@ -59,7 +59,7 @@
 +++ wowup-electron/src/app/components/common/curse-migration-dialog/curse-migration-dialog.component.ts
 @@ -0,0 +1,84 @@
 +import { AfterViewChecked, Component, ElementRef, ViewChild } from "@angular/core";
-+import { MatDialogRef } from "@angular/material/dialog";
++import { MatLegacyDialogRef as MatDialogRef } from "@angular/material/legacy-dialog";
 +import { BehaviorSubject, map } from "rxjs";
 +import { ADDON_PROVIDER_CURSEFORGEV2 } from "../../../../common/constants";
 +import { AddonService } from "../../../services/addons/addon.service";
@@ -164,10 +164,10 @@
 +++ wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
 @@ -33,6 +33,8 @@
  import { formatDynamicLinks } from "../../../utils/dom.utils";
- import { FormGroup } from "@angular/forms";
+ 
  import { AddonProviderType } from "wowup-lib-core";
 +import { CurseMigrationDialogComponent } from "../../../components/common/curse-migration-dialog/curse-migration-dialog.component";
-+import { MatDialog } from "@angular/material/dialog";
++import { MatLegacyDialog as MatDialog } from "@angular/material/legacy-dialog";
  
  interface AddonProviderStateModel extends AddonProviderState {
    adRequired: boolean;
@@ -179,7 +179,7 @@
      private _addonProviderService: AddonProviderFactory,
      private _sensitiveStorageService: SensitiveStorageService,
      private _translateService: TranslateService,
-@@ -106,6 +109,12 @@
+@@ -104,6 +107,12 @@
      this.loadSensitiveData().catch(console.error);
    }
  
