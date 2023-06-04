@@ -1,0 +1,119 @@
+--- wowup-electron/src/app/addon-providers/wago-addon-provider.ts
++++ wowup-electron/src/app/addon-providers/wago-addon-provider.ts
+@@ -167,12 +167,14 @@
+ const WAGO_SEARCH_CACHE_TIME_SEC = 60;
+ const WAGO_DETAILS_CACHE_TIME_SEC = 60;
+ const WAGO_FEATURED_ADDONS_CACHE_TIME_SEC = 60;
++const WAGO_RELOAD_PERIOD_SEC = 10 * 60;
+ 
+ export class WagoAddonProvider extends AddonProvider {
+   private readonly _circuitBreaker: CircuitBreakerWrapper;
+ 
+   private _apiTokenSrc = new BehaviorSubject<string>("");
+   private _wagoSecret = "";
++  private _getWagoTokenTimer: ReturnType<typeof setTimeout>;
+ 
+   // This is our internal http queue, prevents duplicated requests for some routes
+   private _requestQueue: Map<string, Promise<any>> = new Map();
+@@ -181,7 +183,7 @@
+   public readonly forceIgnore = false;
+   public enabled = true;
+   public authRequired = true;
+-  public adRequired = true;
++  public adRequired = false;
+   public allowEdit = true;
+   public allowReinstall = true;
+   public allowChannelChange = true;
+@@ -210,11 +212,13 @@
+       .pipe(filter((change) => change.key == PREF_WAGO_ACCESS_KEY))
+       .subscribe((change) => {
+         console.log("[wago] wago secret set", change);
++        if (this._getWagoTokenTimer) clearTimeout(this._getWagoTokenTimer);
+         if (this.isValidToken(change.value as string)) {
+           this._wagoSecret = change.value;
+           this._circuitBreaker.close();
+         } else {
+           this._wagoSecret = "";
++          void this.getWagoToken();
+         }
+       });
+ 
+@@ -223,12 +227,15 @@
+       .pipe(
+         first(),
+         tap((accessKey) => {
++          if (this._getWagoTokenTimer) clearTimeout(this._getWagoTokenTimer);
+           const validToken = this.isValidToken(accessKey);
+-          this.adRequired = !validToken;
+           if (validToken) {
+             this._wagoSecret = accessKey;
+             console.debug("[wago] secret key set");
+           }
++          else {
++            void this.getWagoToken();
++          }
+         }),
+         catchError((e) => {
+           console.error("[wago] failed to load secret key", e);
+@@ -763,6 +770,28 @@
+     }
+   }
+ 
++  private getWagoToken = async () => {
++    const url = new URL(`${WAGO_AD_URL}`);
++    const response = await this._cachingService.transaction(
++      `${url.toString()}`,
++      () => this._circuitBreaker.getText(url, undefined, { "User-Agent": WAGO_AD_USER_AGENT }),
++      WAGO_FEATURED_ADDONS_CACHE_TIME_SEC
++    );
++
++    console.debug(`[wago] getWagoToken`, response);
++
++    if (response) {
++      const token = response.match(/provideApiKey\(atob\('(.*?)'/);
++      if (token && token.length > 1)
++      {
++        console.debug(`[wago] getWagoToken`, token[1]);
++        this.onWagoTokenReceived(null, Buffer.from(token[1], 'base64').toString());
++      }
++    }
++
++    this._getWagoTokenTimer = setTimeout(() => { void this.getWagoToken() }, WAGO_RELOAD_PERIOD_SEC * 1000);
++  };
++
+   private onWagoTokenReceived = (evt, token: string) => {
+     console.log(`[wago] onWagoTokenReceived: ${token.length}`);
+     if (!this.isValidToken(token)) {
+--- wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
++++ wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
+@@ -200,8 +200,6 @@
+       return;
+     }
+ 
+-    wago.adRequired = accessToken === undefined || accessToken.length <= 20;
+-
+     await this._addonProviderService.setProviderEnabled(ADDON_PROVIDER_WAGO, wago.enabled);
+   }
+ }
+--- wowup-electron/src/app/services/network/network.service.ts
++++ wowup-electron/src/app/services/network/network.service.ts
+@@ -80,11 +80,17 @@
+     );
+   }
+ 
+-  public getText(url: URL | string, timeoutMs?: number): Promise<string> {
++  public getText(
++    url: URL | string,
++    timeoutMs?: number,
++    headers: {
++      [header: string]: string | string[];
++    } = {}
++  ): Promise<string> {
+     return this.fire(() =>
+       firstValueFrom(
+         this._httpClient
+-          .get(url.toString(), { responseType: "text", headers: { ...CACHE_CONTROL_HEADERS } })
++          .get(url.toString(), { responseType: "text", headers: { ...CACHE_CONTROL_HEADERS, ...headers } })
+           .pipe(first(), timeout(timeoutMs ?? this._defaultTimeoutMs))
+       )
+     );

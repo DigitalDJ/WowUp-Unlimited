@@ -1,0 +1,22 @@
+--- .github/workflows/electron-all-build.yml
++++ .github/workflows/electron-all-build.yml
+@@ -60,11 +60,7 @@
+         if: matrix.os == 'macos-11'
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+-          CSC_LINK: ${{ secrets.MACOS_CERT }}
+-          CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+-          NOTARIZE_APPLE_ID: ${{ secrets.NOTARIZE_APPLE_ID }}
+-          NOTARIZE_APPLE_PASSWORD: ${{ secrets.NOTARIZE_APPLE_PASSWORD }}
+-          NOTARIZE_APPLE_TEAM_ID: ${{ secrets.NOTARIZE_APPLE_TEAM_ID }}
++          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+         run: |
+           cd ./wowup-electron
+           npm i
+@@ -74,6 +70,4 @@
+         if: matrix.os == 'windows-latest'
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+-          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+-          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+         run: cd ./WowUp/wowup-electron && npm i && npm run electron:publish

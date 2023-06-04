@@ -1,0 +1,335 @@
+--- wowup-electron/src/app/addon-providers/curse-addon-provider.ts
++++ wowup-electron/src/app/addon-providers/curse-addon-provider.ts
+@@ -1,5 +1,6 @@
+ import * as cfv2 from "curseforge-v2";
+ import * as _ from "lodash";
++import { filter } from "rxjs/operators";
+ import { v4 as uuidv4 } from "uuid";
+ import {
+   Addon,
+@@ -29,6 +30,7 @@
+   ADDON_PROVIDER_CURSEFORGE,
+   NO_LATEST_SEARCH_RESULT_FILES_ERROR,
+   NO_SEARCH_RESULTS_ERROR,
++  PREF_CF2_API_KEY,
+ } from "../../common/constants";
+ import { getWowClientGroup } from "../../common/warcraft";
+ import { AppConfig } from "../../environments/environment";
+@@ -37,6 +39,7 @@
+ import { TocService } from "../services/toc/toc.service";
+ import * as AddonUtils from "../utils/addon.utils";
+ import { strictFilter } from "../utils/array.utils";
++import { SensitiveStorageService } from "../services/storage/sensitive-storage.service";
+ 
+ interface ProtocolData {
+   addonId: number;
+@@ -66,7 +69,7 @@
+ 
+ export class CurseAddonProvider extends AddonProvider {
+   private readonly _circuitBreaker: CircuitBreakerWrapper;
+-  private readonly _cf2Client: cfv2.CFV2Client;
++  private _cf2Client: cfv2.CFV2Client;
+ 
+   public readonly name = ADDON_PROVIDER_CURSEFORGE;
+   public readonly forceIgnore = false;
+@@ -81,7 +84,8 @@
+   public constructor(
+     private _cachingService: CachingService,
+     private _networkService: NetworkService,
+-    private _tocService: TocService
++    private _tocService: TocService,
++    private _sensitiveStorageService: SensitiveStorageService
+   ) {
+     super();
+ 
+@@ -91,8 +95,9 @@
+       AppConfig.curseforge.httpTimeoutMs
+     );
+ 
+-    this._cf2Client = new cfv2.CFV2Client({
+-      apiKey: AppConfig.curseforge.apiKey,
++    // Pick up a CF2 api key change at runtime to force a new client to be created
++    this._sensitiveStorageService.change$.pipe(filter((change) => change.key === PREF_CF2_API_KEY)).subscribe(() => {
++      this._cf2Client = undefined;
+     });
+   }
+ 
+@@ -337,13 +342,18 @@
+       return;
+     }
+ 
++    const client = await this.getClient();
++    if (!client) {
++      return;
++    }
++
+     const scanResults = addonFolders
+       .map((af) => af.cfScanResults)
+       .filter((sr): sr is AddonScanResult => sr !== undefined);
+ 
+     const fingerprints = scanResults.map((sr) => sr.fingerprintNum);
+ 
+-    const result = await this._cf2Client.getFingerprintMatches({ fingerprints });
++    const result = await client.getFingerprintMatches({ fingerprints });
+     const fingerprintData = result.data?.data;
+     try {
+       const matchPairs: { addonFolder: AddonFolder; match: cfv2.CF2FingerprintMatch; addon?: cfv2.CF2Addon }[] = [];
+@@ -370,7 +380,7 @@
+       }
+ 
+       const addonIds = matchPairs.map((mp) => mp.match.id);
+-      const getAddonsResult = await this._cf2Client.getMods({ modIds: addonIds });
++      const getAddonsResult = await client.getMods({ modIds: addonIds });
+       const addonResultData = getAddonsResult.data?.data;
+ 
+       matchPairs.forEach((mp) => {
+@@ -397,12 +407,13 @@
+     externalReleaseId: string
+   ): Promise<string> {
+     try {
++      const client = await this.getClient();
+       const cacheKey = `${this.name}_changelog_${externalId}_${externalReleaseId}`;
+ 
+       const response = await this._cachingService.transaction(
+         cacheKey,
+         () => {
+-          return this._cf2Client.getModFileChangelog(parseInt(externalId, 10), parseInt(externalReleaseId, 10));
++          return client.getModFileChangelog(parseInt(externalId, 10), parseInt(externalReleaseId, 10));
+         },
+         CHANGELOG_CACHE_TTL_SEC
+       );
+@@ -421,11 +432,13 @@
+     addon?: Addon
+   ): Promise<string> {
+     try {
++      const client = await this.getClient();
++
+       const cacheKey = `${this.name}_description_${externalId}`;
+       const response = await this._cachingService.transaction(
+         cacheKey,
+         () => {
+-          return this._cf2Client.getModDescription(parseInt(externalId, 10));
++          return client.getModDescription(parseInt(externalId, 10));
+         },
+         CHANGELOG_CACHE_TTL_SEC
+       );
+@@ -602,8 +615,9 @@
+   }
+ 
+   private async getAddonFileById(addonId: string | number, fileId: string | number): Promise<cfv2.CF2File | undefined> {
++    const client = await this.getClient();
+     const response = await this._circuitBreaker.fire(() =>
+-      this._cf2Client.getModFile(parseInt(`${addonId}`, 10), parseInt(`${fileId}`, 10))
++      client.getModFile(parseInt(`${addonId}`, 10), parseInt(`${fileId}`, 10))
+     );
+ 
+     return response.data?.data;
+@@ -611,7 +625,8 @@
+ 
+   private async getByIdBase(addonId: string): Promise<cfv2.CF2Addon | undefined> {
+     try {
+-      const response = await this._circuitBreaker.fire(() => this._cf2Client.getMod(parseInt(addonId, 10)));
++      const client = await this.getClient();
++      const response = await this._circuitBreaker.fire(() => client.getMod(parseInt(addonId, 10)));
+       return response.data?.data;
+     } catch (e) {
+       // We want to eat things like 400/500 responses
+@@ -789,12 +804,19 @@
+       modIds: addonIds,
+     };
+ 
+-    const response = await this._circuitBreaker.fire(() => this._cf2Client.getMods(request));
++    const client = await this.getClient();
++
++    const response = await this._circuitBreaker.fire(() => client.getMods(request));
+ 
+     return response.data?.data || [];
+   }
+ 
+   private async getFeaturedAddonList(wowInstallation: WowInstallation): Promise<cfv2.CF2Addon[]> {
++    const client = await this.getClient();
++    if (!client) {
++      return [];
++    }
++
+     const gameVersionTypeId = this.getGameVersionTypeId(wowInstallation.clientType);
+ 
+     const request: cfv2.CF2GetFeaturedModsRequest = {
+@@ -806,7 +828,7 @@
+     const cacheKey = `getFeaturedAddonList-${JSON.stringify(request)}`;
+     const result = await this._cachingService.transaction(
+       cacheKey,
+-      () => this._cf2Client.getFeaturedMods(request),
++      () => client.getFeaturedMods(request),
+       FEATURED_ADDONS_CACHE_TTL_SEC
+     );
+ 
+@@ -839,7 +861,8 @@
+       gameVersionTypeId: this.getCFGameVersionType(clientType),
+     };
+ 
+-    const response = await this._circuitBreaker.fire(() => this._cf2Client.searchMods(request));
++    const client = await this.getClient();
++    const response = await this._circuitBreaker.fire(() => client.searchMods(request));
+ 
+     return response.data?.data || [];
+   }
+@@ -882,10 +905,29 @@
+ 
+     const cacheKey = JSON.stringify(request);
+ 
++    const client = await this.getClient();
+     const result = await this._cachingService.transaction(cacheKey, () =>
+-      this._circuitBreaker.fire(() => this._cf2Client.searchMods(request))
++      this._circuitBreaker.fire(() => client.searchMods(request))
+     );
+ 
+     return result?.data?.data ?? [];
+   }
++
++  private async getClient(): Promise<cfv2.CFV2Client | undefined> {
++    if (this._cf2Client) {
++      return this._cf2Client;
++    }
++
++    let apiKey = await this._sensitiveStorageService.getAsync(PREF_CF2_API_KEY);
++    if (typeof apiKey !== "string" || apiKey.length === 0) {
++      await this._sensitiveStorageService.setAsync(PREF_CF2_API_KEY, AppConfig.curseforge.apiKey);
++      apiKey = AppConfig.curseforge.apiKey;
++    }
++
++    this._cf2Client = new cfv2.CFV2Client({
++      apiKey,
++    });
++
++    return this._cf2Client;
++  }  
+ }
+--- wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.html
++++ wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.html
+@@ -26,12 +26,25 @@
+       </mat-selection-list>
+     </div>
+   </div>
+ 
+   <form #prefForm [formGroup]="preferenceForm">
+     <div class="divider"></div>
++    <div class="setting row align-items-center">
++      <div class="flex-grow-1">
++        <div>
++          {{ "PAGES.OPTIONS.ADDON.CURSE_FORGE_V2.API_KEY_TITLE" | translate }}
++        </div>
++        <small class="text-2">{{ "PAGES.OPTIONS.ADDON.CURSE_FORGE_V2.API_KEY_DESCRIPTION" | translate }}</small>
++      </div>
++      <mat-form-field class="example-full-width" appearance="fill">
++        <mat-label>{{ "PAGES.OPTIONS.ADDON.CURSE_FORGE_V2.API_KEY_TITLE" | translate }}</mat-label>
++        <input matInput formControlName="cfV2ApiKey" type="password" />
++      </mat-form-field>
++    </div>
++    <div class="divider"></div>
+     <div class="setting row align-items-center">
+       <div class="flex-grow-1">
+         <div>
+           {{ "PAGES.OPTIONS.ADDON.GITHUB_PERSONAL_ACCESS_TOKEN.TITLE" | translate }}
+         </div>
+         <small
+--- wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
++++ wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
+@@ -18,7 +18,9 @@
+ import { TranslateService } from "@ngx-translate/core";
+ 
+ import {
++  ADDON_PROVIDER_CURSEFORGE,
+   ADDON_PROVIDER_WAGO,
++  PREF_CF2_API_KEY,
+   PREF_GITHUB_PERSONAL_ACCESS_TOKEN,
+   PREF_WAGO_ACCESS_KEY,
+ } from "../../../../common/constants";
+@@ -50,6 +52,7 @@
+   public addonProviderStates$ = new BehaviorSubject<AddonProviderStateModel[]>([]);
+ 
+   public preferenceForm = new FormGroup({
++    cfV2ApiKey: new UntypedFormControl(""),
+     ghPersonalAccessToken: new UntypedFormControl(""),
+     wagoAccessToken: new UntypedFormControl(""),
+   });
+@@ -71,6 +74,9 @@
+         debounceTime(300),
+         switchMap((ch) => {
+           const tasks: Observable<any>[] = [];
++          if (typeof ch?.cfV2ApiKey === "string") {
++            tasks.push(from(this._sensitiveStorageService.setAsync(PREF_CF2_API_KEY, ch.cfV2ApiKey)));
++          }
+           if (typeof ch?.ghPersonalAccessToken === "string") {
+             tasks.push(
+               from(this._sensitiveStorageService.setAsync(PREF_GITHUB_PERSONAL_ACCESS_TOKEN, ch.ghPersonalAccessToken))
+@@ -89,6 +95,10 @@
+       .subscribe();
+   }
+ 
++  public insertCurseApiKey = (): void => {
++    this.preferenceForm.get("cfV2ApiKey")?.setValue(AppConfig.curseforge.apiKey);
++  };
++
+   public ngOnInit(): void {
+     this.loadProviderStates();
+     this.loadSensitiveData().catch(console.error);
+@@ -107,6 +117,9 @@
+   public async onProviderStateSelectionChange(event: MatSelectionListChange): Promise<void> {
+     for (const option of event.options) {
+       const providerName: AddonProviderType = option.value;
++      if (option.selected && providerName == ADDON_PROVIDER_CURSEFORGE) {
++        this.insertCurseApiKey();
++      }
+       if (option.selected && providerName === ADDON_PROVIDER_WAGO) {
+         this.onWagoEnable(option);
+       } else {
+@@ -152,9 +165,11 @@
+ 
+   private async loadSensitiveData() {
+     try {
++      const cfV2ApiKey = await this._sensitiveStorageService.getAsync(PREF_CF2_API_KEY);
+       const ghPersonalAccessToken = await this._sensitiveStorageService.getAsync(PREF_GITHUB_PERSONAL_ACCESS_TOKEN);
+       const wagoAccessToken = await this._sensitiveStorageService.getAsync(PREF_WAGO_ACCESS_KEY);
+ 
++      this.preferenceForm.get("cfV2ApiKey")?.setValue(cfV2ApiKey);
+       this.preferenceForm.get("ghPersonalAccessToken")?.setValue(ghPersonalAccessToken);
+       this.preferenceForm.get("wagoAccessToken")?.setValue(wagoAccessToken);
+     } catch (e) {
+--- wowup-electron/src/assets/i18n/en.json
++++ wowup-electron/src/assets/i18n/en.json
+@@ -493,6 +493,7 @@
+         "CURSE_FORGE_V2": {
+           "API_KEY_DESCRIPTION": "If you have requested a CurseForge API key you can input it here to connect to their API.",
+           "API_KEY_TITLE": "CurseForge API Key",
++          "INSERT_API_KEY": "Insert Default CurseForge API Key",
+           "PROVIDER_NOTE": "API Key Required"
+         },
+         "ENABLED_PROVIDERS": {
+--- wowup-electron/src/app/services/addons/addon.provider.factory.ts
++++ wowup-electron/src/app/services/addons/addon.provider.factory.ts
+@@ -148,7 +148,7 @@
+   }
+ 
+   public createCurseProvider(): CurseAddonProvider {
+-    return new CurseAddonProvider(this._cachingService, this._networkService, this._tocService);
++    return new CurseAddonProvider(this._cachingService, this._networkService, this._tocService, this._sensitiveStorageService);
+   }
+ 
+   public createTukUiAddonProvider(): TukUiAddonProvider {
+--- wowup-electron/src/common/constants.ts
++++ wowup-electron/src/common/constants.ts
+@@ -148,12 +152,13 @@
+ export const CLASSIC_LOCATION_KEY = "wow_classic_location"; // TODO remove, deprecated
+ export const CLASSIC_PTR_LOCATION_KEY = "wow_classic_ptr_location"; // TODO remove, deprecated
+ export const BETA_LOCATION_KEY = "wow_beta_location"; // TODO remove, deprecated
+ export const ACCT_PUSH_ENABLED_KEY = "acct_push_enabled";
+ export const WAGO_PROMPT_KEY = "wago_prompt";
+ export const PREF_TABS_COLLAPSED = "tabs_collapsed";
++export const PREF_CF2_API_KEY = "cf2_api_key";
+ export const PREF_GITHUB_PERSONAL_ACCESS_TOKEN = "github_personal_access_token";
+ export const PREF_WAGO_ACCESS_KEY = "wago_access_key";
+ 
+ export const ACCT_FEATURE_KEYS = [ACCT_PUSH_ENABLED_KEY];
+ 
+ // THEMES
