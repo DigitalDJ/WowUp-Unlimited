@@ -1,0 +1,182 @@
+﻿--- wowup-electron/src/app/components/common/webview/webview.component.ts
++++ wowup-electron/src/app/components/common/webview/webview.component.ts
+@@ -76,13 +76,13 @@
+ 
+     const placeholder = document.createElement("div");
+     placeholder.style.width = "400px";
+     placeholder.style.height = "300px";
+ 
+     /* eslint-disable no-irregular-whitespace */
+-    const webview: any = document.createElement("owadview");
++    const webview: Electron.WebviewTag = document.createElement("webview");
+     webview.id = this._id;
+     webview.src = this.options.pageUrl;
+     webview.setAttribute("style", "width: 100%; height: 100%;");
+     webview.nodeintegration = false;
+     webview.nodeintegrationinsubframes = false;
+     webview.plugins = false;
+--- wowup-electron/app/ipc-events.ts
++++ wowup-electron/app/ipc-events.ts
+@@ -221,14 +221,8 @@
+     return true;
+   });
+ 
+-  handle(IPC_OW_IS_CMP_REQUIRED, async (): Promise<boolean> => {
+-    // NOTE(twolf): Next version of the ow-electron will fix the types
+-    try {
+-      return await (app as any).overwolf.isCMPRequired();
+-    } catch (e) {
+-      console.error("IPC_OW_IS_CMP_REQUIRED failed", e);
+-      return false;
+-    }
++  handle(IPC_OW_IS_CMP_REQUIRED, (): boolean => {
++    return false;
+   });
+ 
+   handle(IPC_OW_OPEN_CMP, (evt, cmpTab?: string) => {
+@@ -236,8 +230,6 @@
+     if (cmpTab) {
+       options.tab = cmpTab;
+     }
+-
+-    (app as any).overwolf.openCMPWindow(options);
+   });
+ 
+   handle(IPC_GET_ZOOM_FACTOR, () => {
+--- wowup-electron/.vscode/launch.json
++++ wowup-electron/.vscode/launch.json
+@@ -29,22 +29,22 @@
+     {
+       "name": "Main",
+       "type": "node",
+       "request": "launch",
+       "protocol": "inspector",
+       "cwd": "${workspaceFolder}",
+-      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ow-electron",
++      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+       "trace": "verbose",
+       "runtimeArgs": ["--force-cmp", "--serve", ".", "--remote-debugging-port=9876"],
+       "windows": {
+-        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ow-electron.cmd"
++        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
+       },
+       "preLaunchTask": "Build.Main"
+     }
+   ],
+   "compounds": [
+     {
+       "name": "Application Debug",
+       "configurations": ["Renderer", "Main"]
+     }
+   ]
+ }
+--- wowup-electron/package-lock.json
++++ wowup-electron/package-lock.json
+@@ -56,14 +56,12 @@
+         "@fortawesome/free-regular-svg-icons": "6.3.0",
+         "@fortawesome/free-solid-svg-icons": "6.3.0",
+         "@messageformat/core": "3.1.0",
+         "@microsoft/applicationinsights-web": "3.0.2",
+         "@ngx-translate/core": "14.0.0",
+         "@ngx-translate/http-loader": "7.0.0",
+-        "@overwolf/ow-electron": "22.3.3",
+-        "@overwolf/ow-electron-builder": "23.6.0",
+         "@types/adm-zip": "0.5.0",
+         "@types/archiver": "5.3.1",
+         "@types/flat": "5.0.2",
+         "@types/globrex": "0.1.2",
+         "@types/jasmine": "4.3.1",
+         "@types/jasminewd2": "2.0.10",
+@@ -84,12 +82,13 @@
+         "chai": "4.3.7",
+         "core-js": "3.21.1",
+         "cross-env": "7.0.3",
+         "curseforge-v2": "1.2.0",
+         "del": "7.0.0",
+         "dotenv": "16.0.3",
++        "electron": "25.0.1",
+         "electron-builder": "23.6.0",
+         "electron-notarize": "1.2.2",
+         "electron-reload": "2.0.0-alpha.1",
+         "eslint": "^8.39.0",
+         "eslint-config-prettier": "8.6.0",
+         "eslint-plugin-import": "2.27.5",
+--- wowup-electron/package.json
++++ wowup-electron/package.json
+@@ -15,36 +15,36 @@
+   "author": {
+     "name": "WowUp LLC",
+     "email": "zakrn@wowup.io"
+   },
+   "main": "app/main.js",
+   "scripts": {
+-    "postinstall": "ow-electron-builder install-app-deps",
++    "postinstall": "electron-builder install-app-deps",
+     "install:prod": "npm ci --only=prod --no-optional",
+     "ng": "ng",
+-    "start": "npm-run-all -p ow-electron:serve ng:serve",
++    "start": "npm-run-all -p electron:serve ng:serve",
+     "build": "npm run electron:serve-tsc && ng build --base-href ./",
+     "build:dev": "npm run build -- -c dev",
+     "build:prod": "npm run build -- -c production",
+     "ng:serve": "ng serve",
+     "ng:serve:web": "ng serve -c web -o",
+     "electron:serve-tsc": "tsc -p tsconfig.serve.json",
+-    "electron:serve": "wait-on tcp:4200 && npm run ow-electron:serve-tsc && npx ow-electron . --serve",
+-    "electron:local": "npm run build:prod && npx ow-electron .",
+-    "electron:build": "npm run build:prod && ow-electron-builder build",
+-    "electron:build:local": "npm run build:prod && ow-electron-builder build -c electron-builder-local.json",
+-    "electron:publish": "npm run lint && npm run build:prod && ow-electron-builder build --publish always",
++    "electron:serve": "wait-on tcp:4200 && npm run electron:serve-tsc && npx electron . --serve",
++    "electron:local": "npm run build:prod && npx electron .",
++    "electron:build": "npm run build:prod && electron-builder build",
++    "electron:build:local": "npm run build:prod && electron-builder build -c electron-builder-local.json",
++    "electron:publish": "npm run lint && npm run build:prod && electron-builder build --publish always",
+     "electron:publish:vanilla": "npm run lint && npm run build:prod && electron-builder build --publish always",
+     "electron:publish:linux": "docker-compose -f linux-compose.yml up",
+-    "electron:publish:never": "npm run electron:build && ow-electron-builder --publish never",
+-    "electron:publish:never:local": "npm run build:dev && npx ow-electron-builder -c electron-builder-local.json --publish never",
+-    "electron:publish:never:t": "ow-electron-builder -c ow-electron-builder-local.json --publish never",
++    "electron:publish:never": "npm run electron:build && electron-builder --publish never",
++    "electron:publish:never:local": "npm run build:dev && npx electron-builder -c electron-builder-local.json --publish never",
++    "electron:publish:never:t": "electron-builder -c electron-builder-local.json --publish never",
+     "test": "ng test --watch=false",
+     "test:watch": "ng test",
+     "test:locales": "ng test --watch=false --include='src/locales.spec.ts'",
+-    "test:customprotocol:": "npx ow-electron . \"curseforge://install?addonId=14154&fileId=4073235\"",
++    "test:customprotocol:": "npx electron . \"curseforge://install?addonId=14154&fileId=4073235\"",
+     "e2e": "npm run build:prod && cross-env TS_NODE_PROJECT='e2e/tsconfig.e2e.json' mocha --timeout 300000 --require ts-node/register e2e/**/*.e2e.ts",
+     "version": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md",
+     "lint": "ng lint",
+     "i18n": "sync-i18n --files ./src/assets/i18n/*.json --primary en --space 2 --finalnewline --lineendings CRLF --languages cs de es fr it nb pt ru zh zh-TW ko pl",
+     "check-i18n": "npm run i18n -- --check",
+     "pretty": "npx prettier --write . && ng lint --fix",
+@@ -104,14 +104,12 @@
+     "@fortawesome/free-regular-svg-icons": "6.3.0",
+     "@fortawesome/free-solid-svg-icons": "6.3.0",
+     "@messageformat/core": "3.1.0",
+     "@microsoft/applicationinsights-web": "3.0.2",
+     "@ngx-translate/core": "14.0.0",
+     "@ngx-translate/http-loader": "7.0.0",
+-    "@overwolf/ow-electron": "22.3.3",
+-    "@overwolf/ow-electron-builder": "23.6.0",
+     "@types/adm-zip": "0.5.0",
+     "@types/archiver": "5.3.1",
+     "@types/flat": "5.0.2",
+     "@types/globrex": "0.1.2",
+     "@types/jasmine": "4.3.1",
+     "@types/jasminewd2": "2.0.10",
+@@ -132,12 +130,13 @@
+     "chai": "4.3.7",
+     "core-js": "3.21.1",
+     "cross-env": "7.0.3",
+     "curseforge-v2": "1.2.0",
+     "del": "7.0.0",
+     "dotenv": "16.0.3",
++    "electron": "25.0.1",
+     "electron-builder": "23.6.0",
+     "electron-notarize": "1.2.2",
+     "electron-reload": "2.0.0-alpha.1",
+     "eslint": "^8.39.0",
+     "eslint-config-prettier": "8.6.0",
+     "eslint-plugin-import": "2.27.5",
