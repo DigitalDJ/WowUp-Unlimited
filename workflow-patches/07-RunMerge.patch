@@ -1,6 +1,6 @@
 --- .github/workflows/electron-all-build.yml
 +++ .github/workflows/electron-all-build.yml
-@@ -33,6 +33,29 @@
+@@ -69,6 +69,29 @@
          with:
            fetch-depth: 0
  

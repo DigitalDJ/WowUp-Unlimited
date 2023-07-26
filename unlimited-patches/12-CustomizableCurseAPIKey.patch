@@ -235,7 +235,7 @@
          <small
 --- wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
 +++ wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
-@@ -18,7 +18,9 @@
+@@ -21,7 +21,9 @@
  import { TranslateService } from "@ngx-translate/core";
  
  import {
@@ -245,7 +245,7 @@
    PREF_GITHUB_PERSONAL_ACCESS_TOKEN,
    PREF_WAGO_ACCESS_KEY,
  } from "../../../../common/constants";
-@@ -50,6 +52,7 @@
+@@ -51,6 +53,7 @@
    public addonProviderStates$ = new BehaviorSubject<AddonProviderStateModel[]>([]);
  
    public preferenceForm = new FormGroup({
@@ -274,7 +274,7 @@
    public ngOnInit(): void {
      this.loadProviderStates();
      this.loadSensitiveData().catch(console.error);
-@@ -107,6 +117,9 @@
+@@ -106,6 +116,9 @@
    public async onProviderStateSelectionChange(event: MatSelectionListChange): Promise<void> {
      for (const option of event.options) {
        const providerName: AddonProviderType = option.value;
@@ -284,7 +284,7 @@
        if (option.selected && providerName === ADDON_PROVIDER_WAGO) {
          this.onWagoEnable(option);
        } else {
-@@ -152,9 +165,11 @@
+@@ -145,9 +158,11 @@
  
    private async loadSensitiveData() {
      try {
@@ -298,7 +298,7 @@
      } catch (e) {
 --- wowup-electron/src/assets/i18n/en.json
 +++ wowup-electron/src/assets/i18n/en.json
-@@ -493,6 +493,7 @@
+@@ -495,6 +495,7 @@
          "CURSE_FORGE_V2": {
            "API_KEY_DESCRIPTION": "If you have requested a CurseForge API key you can input it here to connect to their API.",
            "API_KEY_TITLE": "CurseForge API Key",
@@ -319,7 +319,7 @@
    public createTukUiAddonProvider(): TukUiAddonProvider {
 --- wowup-electron/src/common/constants.ts
 +++ wowup-electron/src/common/constants.ts
-@@ -148,12 +152,13 @@
+@@ -148,12 +148,13 @@
  export const CLASSIC_LOCATION_KEY = "wow_classic_location"; // TODO remove, deprecated
  export const CLASSIC_PTR_LOCATION_KEY = "wow_classic_ptr_location"; // TODO remove, deprecated
  export const BETA_LOCATION_KEY = "wow_beta_location"; // TODO remove, deprecated

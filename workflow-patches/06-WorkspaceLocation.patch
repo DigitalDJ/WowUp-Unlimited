@@ -1,6 +1,6 @@
 --- .github/workflows/electron-all-build.yml
 +++ .github/workflows/electron-all-build.yml
-@@ -44,7 +44,7 @@
+@@ -87,7 +87,7 @@
        - name: dmg-license
          if: matrix.os == 'macos-11'
          run: |
@@ -9,7 +9,7 @@
            npm i dmg-license
  
        - name: Build Linux App
-@@ -52,7 +52,7 @@
+@@ -95,7 +95,7 @@
          env:
            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
          run: |
@@ -18,7 +18,7 @@
            npm i
            npm run electron:publish
  
-@@ -66,7 +66,7 @@
+@@ -109,7 +109,7 @@
            NOTARIZE_APPLE_PASSWORD: ${{ secrets.NOTARIZE_APPLE_PASSWORD }}
            NOTARIZE_APPLE_TEAM_ID: ${{ secrets.NOTARIZE_APPLE_TEAM_ID }}
          run: |
@@ -27,7 +27,7 @@
            npm i
            npm run electron:publish
  
-@@ -76,4 +76,4 @@
+@@ -119,4 +119,4 @@
            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
            CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
            CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}

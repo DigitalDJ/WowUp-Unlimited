@@ -72,11 +72,11 @@
  }
 --- wowup-electron/package-lock.json
 +++ wowup-electron/package-lock.json
-@@ -57,14 +57,12 @@
+@@ -56,14 +56,12 @@
          "@fortawesome/free-regular-svg-icons": "6.3.0",
          "@fortawesome/free-solid-svg-icons": "6.3.0",
-         "@messageformat/core": "3.0.1",
-         "@microsoft/applicationinsights-web": "2.8.10",
+         "@messageformat/core": "3.1.0",
+         "@microsoft/applicationinsights-web": "3.0.2",
          "@ngx-translate/core": "14.0.0",
          "@ngx-translate/http-loader": "7.0.0",
 -        "@overwolf/ow-electron": "22.3.3",
@@ -87,18 +87,18 @@
          "@types/globrex": "0.1.2",
          "@types/jasmine": "4.3.1",
          "@types/jasminewd2": "2.0.10",
-@@ -85,12 +83,13 @@
+@@ -84,12 +82,13 @@
          "chai": "4.3.7",
          "core-js": "3.21.1",
          "cross-env": "7.0.3",
          "curseforge-v2": "1.2.0",
          "del": "7.0.0",
          "dotenv": "16.0.3",
-+        "electron": "24.4.0",
++        "electron": "25.0.1",
          "electron-builder": "23.6.0",
          "electron-notarize": "1.2.2",
          "electron-reload": "2.0.0-alpha.1",
-         "eslint": "8.34.0",
+         "eslint": "^8.39.0",
          "eslint-config-prettier": "8.6.0",
          "eslint-plugin-import": "2.27.5",
 --- wowup-electron/package.json
@@ -151,11 +151,11 @@
      "i18n": "sync-i18n --files ./src/assets/i18n/*.json --primary en --space 2 --finalnewline --lineendings CRLF --languages cs de es fr it nb pt ru zh zh-TW ko pl",
      "check-i18n": "npm run i18n -- --check",
      "pretty": "npx prettier --write . && ng lint --fix",
-@@ -105,14 +105,12 @@
+@@ -104,14 +104,12 @@
      "@fortawesome/free-regular-svg-icons": "6.3.0",
      "@fortawesome/free-solid-svg-icons": "6.3.0",
-     "@messageformat/core": "3.0.1",
-     "@microsoft/applicationinsights-web": "2.8.10",
+     "@messageformat/core": "3.1.0",
+     "@microsoft/applicationinsights-web": "3.0.2",
      "@ngx-translate/core": "14.0.0",
      "@ngx-translate/http-loader": "7.0.0",
 -    "@overwolf/ow-electron": "22.3.3",
@@ -166,17 +166,17 @@
      "@types/globrex": "0.1.2",
      "@types/jasmine": "4.3.1",
      "@types/jasminewd2": "2.0.10",
-@@ -133,12 +131,13 @@
+@@ -132,12 +130,13 @@
      "chai": "4.3.7",
      "core-js": "3.21.1",
      "cross-env": "7.0.3",
      "curseforge-v2": "1.2.0",
      "del": "7.0.0",
      "dotenv": "16.0.3",
-+    "electron": "24.4.0",
++    "electron": "25.0.1",
      "electron-builder": "23.6.0",
      "electron-notarize": "1.2.2",
      "electron-reload": "2.0.0-alpha.1",
-     "eslint": "8.34.0",
+     "eslint": "^8.39.0",
      "eslint-config-prettier": "8.6.0",
      "eslint-plugin-import": "2.27.5",

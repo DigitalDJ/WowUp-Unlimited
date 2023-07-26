@@ -162,8 +162,8 @@
      <div class="setting row align-items-center">
 --- wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
 +++ wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
-@@ -33,6 +33,8 @@
- import { formatDynamicLinks } from "../../../utils/dom.utils";
+@@ -34,6 +34,8 @@
+ import { SensitiveStorageService } from "../../../services/storage/sensitive-storage.service";
  
  import { AddonProviderType } from "wowup-lib-core";
 +import { CurseMigrationDialogComponent } from "../../../components/common/curse-migration-dialog/curse-migration-dialog.component";
@@ -171,7 +171,7 @@
  
  interface AddonProviderStateModel extends AddonProviderState {
    adRequired: boolean;
-@@ -58,6 +60,7 @@
+@@ -59,6 +61,7 @@
    });
  
    public constructor(
@@ -190,8 +190,8 @@
 +  };
 +
    public ngAfterViewChecked(): void {
-     const descriptionContainer: HTMLDivElement = this.prefForm?.nativeElement;
-     formatDynamicLinks(descriptionContainer, this.onOpenLink);
+     // formatDynamicLinks(descriptionContainer, this.onOpenLink);
+   }
 --- wowup-electron/src/app/modules/common-ui.module.ts
 +++ wowup-electron/src/app/modules/common-ui.module.ts
 @@ -7,12 +7,13 @@
@@ -267,9 +267,9 @@
  import { WowUpProtocolService } from "./services/wowup/wowup-protocol.service";
 +import { CurseMigrationDialogComponent } from "./components/common/curse-migration-dialog/curse-migration-dialog.component";
  import { Addon } from "wowup-lib-core";
+ import { LinkService } from "./services/links/link.service";
  
- @Component({
-@@ -263,6 +265,15 @@
+@@ -285,6 +287,15 @@
        }
  
        this.showPreLoad$.next(false);
@@ -285,7 +285,7 @@
      } catch (e) {
        console.error(e);
      }
-@@ -296,6 +307,17 @@
+@@ -318,6 +329,17 @@
      this.openInstallFromUrlDialog(path);
    };
  
@@ -305,7 +305,7 @@
        disableClose: true,
 --- wowup-electron/src/assets/i18n/en.json
 +++ wowup-electron/src/assets/i18n/en.json
-@@ -496,6 +496,7 @@
+@@ -498,6 +498,7 @@
            "INSERT_API_KEY": "Insert Default CurseForge API Key",
            "PROVIDER_NOTE": "API Key Required"
          },

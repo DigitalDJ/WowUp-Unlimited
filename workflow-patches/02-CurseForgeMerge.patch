@@ -1,6 +1,6 @@
 ﻿--- .github/workflows/electron-all-build.yml
 +++ .github/workflows/electron-all-build.yml
-@@ -35,12 +35,19 @@
+@@ -63,12 +63,19 @@
  
        - name: Use Node.js ${{ matrix.node-version }}
          uses: actions/setup-node@v2
@@ -20,7 +20,7 @@
        - name: dmg-license
          if: matrix.os == 'macos-11'
          run: |
-@@ -51,13 +58,13 @@
+@@ -79,13 +86,13 @@
          if: matrix.os == 'ubuntu-latest'
          env:
            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
@@ -35,7 +35,7 @@
          env:
            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
            CSC_LINK: ${{ secrets.MACOS_CERT }}
-@@ -65,15 +72,15 @@
+@@ -93,15 +100,15 @@
            NOTARIZE_APPLE_ID: ${{ secrets.NOTARIZE_APPLE_ID }}
            NOTARIZE_APPLE_PASSWORD: ${{ secrets.NOTARIZE_APPLE_PASSWORD }}
            NOTARIZE_APPLE_TEAM_ID: ${{ secrets.NOTARIZE_APPLE_TEAM_ID }}

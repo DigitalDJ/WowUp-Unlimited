@@ -1,6 +1,6 @@
 --- .github/workflows/electron-all-build.yml
 +++ .github/workflows/electron-all-build.yml
-@@ -60,11 +60,7 @@
+@@ -126,11 +126,7 @@
          if: matrix.os == 'macos-11'
          env:
            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
@@ -13,7 +13,7 @@
          run: |
            cd ./wowup-electron
            npm i
-@@ -74,6 +70,4 @@
+@@ -140,6 +136,4 @@
          if: matrix.os == 'windows-latest'
          env:
            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
