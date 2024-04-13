@@ -1,6 +1,6 @@
 --- wowup-electron/src/app/addon-providers/curse-addon-provider.ts
 +++ wowup-electron/src/app/addon-providers/curse-addon-provider.ts
-@@ -46,23 +46,23 @@
+@@ -53,23 +53,23 @@
  const CHANGELOG_CACHE_TTL_SEC = 30 * 60;
  const FEATURED_ADDONS_CACHE_TTL_SEC = AppConfig.featuredAddonsCacheTimeSec;
  
@@ -21,13 +21,13 @@
      flavor: "wow_retail",
 -    typeId: 517,
 +    typeId: [517],
-     matches: [WowClientType.Retail, WowClientType.RetailPtr, WowClientType.Beta],
+     matches: [WowClientType.Retail, WowClientType.RetailPtr, WowClientType.Beta, WowClientType.RetailXPtr],
    },
  ];
  
  export class CurseAddonProvider extends AddonProvider {
    private readonly _circuitBreaker: CircuitBreakerWrapper;
-@@ -458,13 +458,13 @@
+@@ -480,13 +480,13 @@
    private getGameVersionTypeId(clientType: WowClientType): number {
      const gameType = GAME_TYPE_LISTS.find((gtl) => gtl.matches.includes(clientType));
      if (!gameType) {
@@ -42,16 +42,16 @@
      if (!file?.sortableGameVersions) {
        console.debug("sortableGameVersions missing", file);
      }
-@@ -770,13 +770,13 @@
+@@ -792,13 +792,13 @@
      }
    }
  
    private getValidClientTypes(file: cfv2.CF2File): WowClientType[] {
      const gameVersions: WowClientType[] = _.flatten(
        GAME_TYPE_LISTS.filter((type) =>
--        file.sortableGameVersions.find((sgv) => sgv.gameVersionTypeId === type.typeId)
+-        file.sortableGameVersions.find((sgv) => sgv.gameVersionTypeId === type.typeId),
 +        file.sortableGameVersions.find((sgv) => type.typeId.includes(sgv.gameVersionTypeId))
-       ).map((game) => game.matches)
+       ).map((game) => game.matches),
      );
  
      return _.uniq(gameVersions);

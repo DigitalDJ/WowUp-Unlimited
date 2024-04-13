@@ -1,6 +1,6 @@
 --- wowup-electron/src/app/addon-providers/curse-addon-provider.ts
 +++ wowup-electron/src/app/addon-providers/curse-addon-provider.ts
-@@ -72,13 +72,13 @@
+@@ -79,13 +79,13 @@
    public readonly forceIgnore = false;
    public readonly allowChannelChange = true;
    public readonly allowReinstall = true;
@@ -14,4 +14,4 @@
    public constructor(
      private _cachingService: CachingService,
      private _networkService: NetworkService,
-     private _tocService: TocService
+     private _tocService: TocService,

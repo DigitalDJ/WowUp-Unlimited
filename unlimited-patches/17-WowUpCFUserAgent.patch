@@ -1,6 +1,6 @@
 ﻿--- wowup-electron/app/main.ts
 +++ wowup-electron/app/main.ts
-@@ -562,8 +562,8 @@
+@@ -567,8 +567,8 @@
    }
    return argv.hidden || loginItems.wasOpenedAsHidden;
  }

@@ -59,7 +59,7 @@
 +++ wowup-electron/src/app/components/common/curse-migration-dialog/curse-migration-dialog.component.ts
 @@ -0,0 +1,84 @@
 +import { AfterViewChecked, Component, ElementRef, ViewChild } from "@angular/core";
-+import { MatLegacyDialogRef as MatDialogRef } from "@angular/material/legacy-dialog";
++import { MatDialogRef } from "@angular/material/dialog";
 +import { BehaviorSubject, map } from "rxjs";
 +import { ADDON_PROVIDER_CURSEFORGEV2 } from "../../../../common/constants";
 +import { AddonService } from "../../../services/addons/addon.service";
@@ -167,7 +167,7 @@
  
  import { AddonProviderType } from "wowup-lib-core";
 +import { CurseMigrationDialogComponent } from "../../../components/common/curse-migration-dialog/curse-migration-dialog.component";
-+import { MatLegacyDialog as MatDialog } from "@angular/material/legacy-dialog";
++import { MatDialog } from "@angular/material/dialog";
  
  interface AddonProviderStateModel extends AddonProviderState {
    adRequired: boolean;
@@ -208,8 +208,8 @@
  import { TelemetryDialogComponent } from "../components/common/telemetry-dialog/telemetry-dialog.component";
  import { WebViewComponent } from "../components/common/webview/webview.component";
  import { ProgressSpinnerComponent } from "../components/progress-spinner/progress-spinner.component";
-@@ -31,12 +32,13 @@
-     ProgressButtonComponent,
+@@ -32,12 +33,13 @@
+     PatchNotesDialogComponent,
      TelemetryDialogComponent,
      ConsentDialogComponent,
      CellWrapTextComponent,
@@ -222,8 +222,8 @@
    exports: [
      ProgressSpinnerComponent,
      ProgressButtonComponent,
-@@ -48,10 +50,11 @@
-     ProgressButtonComponent,
+@@ -49,10 +51,11 @@
+     PatchNotesDialogComponent,
      TelemetryDialogComponent,
      ConsentDialogComponent,
      CellWrapTextComponent,
@@ -305,7 +305,7 @@
        disableClose: true,
 --- wowup-electron/src/assets/i18n/en.json
 +++ wowup-electron/src/assets/i18n/en.json
-@@ -498,6 +498,7 @@
+@@ -500,6 +500,7 @@
            "INSERT_API_KEY": "Insert Default CurseForge API Key",
            "PROVIDER_NOTE": "API Key Required"
          },

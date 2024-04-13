@@ -17,7 +17,7 @@
      webview.plugins = false;
 --- wowup-electron/app/ipc-events.ts
 +++ wowup-electron/app/ipc-events.ts
-@@ -221,14 +221,8 @@
+@@ -222,14 +222,8 @@
      return true;
    });
  
@@ -34,7 +34,7 @@
    });
  
    handle(IPC_OW_OPEN_CMP, (evt, cmpTab?: string) => {
-@@ -236,8 +230,6 @@
+@@ -237,8 +231,6 @@
      if (cmpTab) {
        options.tab = cmpTab;
      }
@@ -72,35 +72,21 @@
  }
 --- wowup-electron/package-lock.json
 +++ wowup-electron/package-lock.json
-@@ -56,14 +56,12 @@
-         "@fortawesome/free-regular-svg-icons": "6.3.0",
-         "@fortawesome/free-solid-svg-icons": "6.3.0",
-         "@messageformat/core": "3.1.0",
-         "@microsoft/applicationinsights-web": "3.0.2",
-         "@ngx-translate/core": "14.0.0",
-         "@ngx-translate/http-loader": "7.0.0",
--        "@overwolf/ow-electron": "22.3.3",
--        "@overwolf/ow-electron-builder": "23.6.0",
-         "@types/adm-zip": "0.5.0",
-         "@types/archiver": "5.3.1",
+@@ -55,14 +55,12 @@
+         "@fortawesome/free-regular-svg-icons": "6.4.2",
+         "@fortawesome/free-solid-svg-icons": "6.4.2",
+         "@messageformat/core": "3.2.0",
+         "@microsoft/applicationinsights-web": "3.0.5",
+         "@ngx-translate/core": "15.0.0",
+         "@ngx-translate/http-loader": "8.0.0",
+-        "@overwolf/ow-electron": "22.3.27",
+-        "@overwolf/ow-electron-builder": "24.7.0",
+         "@types/adm-zip": "0.5.1",
          "@types/flat": "5.0.2",
          "@types/globrex": "0.1.2",
-         "@types/jasmine": "4.3.1",
+         "@types/jasmine": "4.3.5",
          "@types/jasminewd2": "2.0.10",
-@@ -84,12 +82,13 @@
-         "chai": "4.3.7",
-         "core-js": "3.21.1",
-         "cross-env": "7.0.3",
-         "curseforge-v2": "1.2.0",
-         "del": "7.0.0",
-         "dotenv": "16.0.3",
-+        "electron": "25.0.1",
-         "electron-builder": "23.6.0",
-         "electron-notarize": "1.2.2",
-         "electron-reload": "2.0.0-alpha.1",
-         "eslint": "^8.39.0",
-         "eslint-config-prettier": "8.6.0",
-         "eslint-plugin-import": "2.27.5",
+         "@types/lodash": "4.14.198",
 --- wowup-electron/package.json
 +++ wowup-electron/package.json
 @@ -15,36 +15,36 @@
@@ -151,32 +137,18 @@
      "i18n": "sync-i18n --files ./src/assets/i18n/*.json --primary en --space 2 --finalnewline --lineendings CRLF --languages cs de es fr it nb pt ru zh zh-TW ko pl",
      "check-i18n": "npm run i18n -- --check",
      "pretty": "npx prettier --write . && ng lint --fix",
-@@ -104,14 +104,12 @@
-     "@fortawesome/free-regular-svg-icons": "6.3.0",
-     "@fortawesome/free-solid-svg-icons": "6.3.0",
-     "@messageformat/core": "3.1.0",
-     "@microsoft/applicationinsights-web": "3.0.2",
-     "@ngx-translate/core": "14.0.0",
-     "@ngx-translate/http-loader": "7.0.0",
--    "@overwolf/ow-electron": "22.3.3",
--    "@overwolf/ow-electron-builder": "23.6.0",
-     "@types/adm-zip": "0.5.0",
-     "@types/archiver": "5.3.1",
+@@ -103,14 +103,12 @@
+     "@fortawesome/free-regular-svg-icons": "6.4.2",
+     "@fortawesome/free-solid-svg-icons": "6.4.2",
+     "@messageformat/core": "3.2.0",
+     "@microsoft/applicationinsights-web": "3.0.5",
+     "@ngx-translate/core": "15.0.0",
+     "@ngx-translate/http-loader": "8.0.0",
+-    "@overwolf/ow-electron": "22.3.27",
+-    "@overwolf/ow-electron-builder": "24.7.0",
+     "@types/adm-zip": "0.5.1",
      "@types/flat": "5.0.2",
      "@types/globrex": "0.1.2",
-     "@types/jasmine": "4.3.1",
+     "@types/jasmine": "4.3.5",
      "@types/jasminewd2": "2.0.10",
-@@ -132,12 +130,13 @@
-     "chai": "4.3.7",
-     "core-js": "3.21.1",
-     "cross-env": "7.0.3",
-     "curseforge-v2": "1.2.0",
-     "del": "7.0.0",
-     "dotenv": "16.0.3",
-+    "electron": "25.0.1",
-     "electron-builder": "23.6.0",
-     "electron-notarize": "1.2.2",
-     "electron-reload": "2.0.0-alpha.1",
-     "eslint": "^8.39.0",
-     "eslint-config-prettier": "8.6.0",
-     "eslint-plugin-import": "2.27.5",
+     "@types/lodash": "4.14.198",

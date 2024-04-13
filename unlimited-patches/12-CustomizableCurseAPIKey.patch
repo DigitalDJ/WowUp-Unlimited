@@ -15,15 +15,15 @@
  } from "../../common/constants";
  import { getWowClientGroup } from "../../common/warcraft";
  import { AppConfig } from "../../environments/environment";
-@@ -37,6 +39,7 @@
- import { TocService } from "../services/toc/toc.service";
+@@ -38,6 +40,7 @@
  import * as AddonUtils from "../utils/addon.utils";
  import { strictFilter } from "../utils/array.utils";
+ import { TocNotFoundError } from "../errors";
 +import { SensitiveStorageService } from "../services/storage/sensitive-storage.service";
  
  interface ProtocolData {
    addonId: number;
-@@ -66,7 +69,7 @@
+@@ -73,7 +76,7 @@
  
  export class CurseAddonProvider extends AddonProvider {
    private readonly _circuitBreaker: CircuitBreakerWrapper;
@@ -32,18 +32,16 @@
  
    public readonly name = ADDON_PROVIDER_CURSEFORGE;
    public readonly forceIgnore = false;
-@@ -81,7 +84,8 @@
-   public constructor(
+@@ -89,6 +92,7 @@
      private _cachingService: CachingService,
      private _networkService: NetworkService,
--    private _tocService: TocService
-+    private _tocService: TocService,
-+    private _sensitiveStorageService: SensitiveStorageService
+     private _tocService: TocService,
++    private _sensitiveStorageService: SensitiveStorageService,
    ) {
      super();
  
-@@ -91,8 +95,9 @@
-       AppConfig.curseforge.httpTimeoutMs
+@@ -98,8 +102,9 @@
+       AppConfig.curseforge.httpTimeoutMs,
      );
  
 -    this._cf2Client = new cfv2.CFV2Client({
@@ -54,7 +52,7 @@
      });
    }
  
-@@ -337,13 +342,18 @@
+@@ -344,13 +349,18 @@
        return;
      }
  
@@ -73,8 +71,8 @@
 +    const result = await client.getFingerprintMatches({ fingerprints });
      const fingerprintData = result.data?.data;
      try {
-       const matchPairs: { addonFolder: AddonFolder; match: cfv2.CF2FingerprintMatch; addon?: cfv2.CF2Addon }[] = [];
-@@ -370,7 +380,7 @@
+       const matchPairs: ScanMatchPair[] = [];
+@@ -378,7 +388,7 @@
        }
  
        const addonIds = matchPairs.map((mp) => mp.match.id);
@@ -82,9 +80,9 @@
 +      const getAddonsResult = await client.getMods({ modIds: addonIds });
        const addonResultData = getAddonsResult.data?.data;
  
-       matchPairs.forEach((mp) => {
-@@ -397,12 +407,13 @@
-     externalReleaseId: string
+       const potentialChildren: ScanMatchPair[] = [];
+@@ -423,12 +433,13 @@
+     externalReleaseId: string,
    ): Promise<string> {
      try {
 +      const client = await this.getClient();
@@ -96,11 +94,11 @@
 -          return this._cf2Client.getModFileChangelog(parseInt(externalId, 10), parseInt(externalReleaseId, 10));
 +          return client.getModFileChangelog(parseInt(externalId, 10), parseInt(externalReleaseId, 10));
          },
-         CHANGELOG_CACHE_TTL_SEC
+         CHANGELOG_CACHE_TTL_SEC,
        );
-@@ -421,11 +432,13 @@
-     addon?: Addon
-   ): Promise<string> {
+@@ -443,11 +454,13 @@
+ 
+   public override async getDescription(installation: WowInstallation, externalId: string): Promise<string> {
      try {
 +      const client = await this.getClient();
 +
@@ -111,20 +109,20 @@
 -          return this._cf2Client.getModDescription(parseInt(externalId, 10));
 +          return client.getModDescription(parseInt(externalId, 10));
          },
-         CHANGELOG_CACHE_TTL_SEC
+         CHANGELOG_CACHE_TTL_SEC,
        );
-@@ -602,8 +615,9 @@
+@@ -624,8 +637,9 @@
    }
  
    private async getAddonFileById(addonId: string | number, fileId: string | number): Promise<cfv2.CF2File | undefined> {
 +    const client = await this.getClient();
      const response = await this._circuitBreaker.fire(() =>
--      this._cf2Client.getModFile(parseInt(`${addonId}`, 10), parseInt(`${fileId}`, 10))
-+      client.getModFile(parseInt(`${addonId}`, 10), parseInt(`${fileId}`, 10))
+-      this._cf2Client.getModFile(parseInt(`${addonId}`, 10), parseInt(`${fileId}`, 10)),
++      client.getModFile(parseInt(`${addonId}`, 10), parseInt(`${fileId}`, 10)),
      );
  
      return response.data?.data;
-@@ -611,7 +625,8 @@
+@@ -633,7 +647,8 @@
  
    private async getByIdBase(addonId: string): Promise<cfv2.CF2Addon | undefined> {
      try {
@@ -134,7 +132,7 @@
        return response.data?.data;
      } catch (e) {
        // We want to eat things like 400/500 responses
-@@ -789,12 +804,19 @@
+@@ -811,12 +826,19 @@
        modIds: addonIds,
      };
  
@@ -155,16 +153,16 @@
      const gameVersionTypeId = this.getGameVersionTypeId(wowInstallation.clientType);
  
      const request: cfv2.CF2GetFeaturedModsRequest = {
-@@ -806,7 +828,7 @@
+@@ -828,7 +850,7 @@
      const cacheKey = `getFeaturedAddonList-${JSON.stringify(request)}`;
      const result = await this._cachingService.transaction(
        cacheKey,
 -      () => this._cf2Client.getFeaturedMods(request),
 +      () => client.getFeaturedMods(request),
-       FEATURED_ADDONS_CACHE_TTL_SEC
+       FEATURED_ADDONS_CACHE_TTL_SEC,
      );
  
-@@ -839,7 +861,8 @@
+@@ -861,7 +883,8 @@
        gameVersionTypeId: this.getCFGameVersionType(clientType),
      };
  
@@ -174,14 +172,14 @@
  
      return response.data?.data || [];
    }
-@@ -882,10 +905,29 @@
+@@ -904,10 +927,29 @@
  
      const cacheKey = JSON.stringify(request);
  
 +    const client = await this.getClient();
      const result = await this._cachingService.transaction(cacheKey, () =>
--      this._circuitBreaker.fire(() => this._cf2Client.searchMods(request))
-+      this._circuitBreaker.fire(() => client.searchMods(request))
+-      this._circuitBreaker.fire(() => this._cf2Client.searchMods(request)),
++      this._circuitBreaker.fire(() => client.searchMods(request)),
      );
  
      return result?.data?.data ?? [];
@@ -262,7 +260,7 @@
 +          }
            if (typeof ch?.ghPersonalAccessToken === "string") {
              tasks.push(
-               from(this._sensitiveStorageService.setAsync(PREF_GITHUB_PERSONAL_ACCESS_TOKEN, ch.ghPersonalAccessToken))
+               from(this._sensitiveStorageService.setAsync(PREF_GITHUB_PERSONAL_ACCESS_TOKEN, ch.ghPersonalAccessToken)),
 @@ -89,6 +95,10 @@
        .subscribe();
    }
@@ -298,7 +296,7 @@
      } catch (e) {
 --- wowup-electron/src/assets/i18n/en.json
 +++ wowup-electron/src/assets/i18n/en.json
-@@ -495,6 +495,7 @@
+@@ -497,6 +497,7 @@
          "CURSE_FORGE_V2": {
            "API_KEY_DESCRIPTION": "If you have requested a CurseForge API key you can input it here to connect to their API.",
            "API_KEY_TITLE": "CurseForge API Key",
