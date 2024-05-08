@@ -1,0 +1,12 @@
+<button
+  class="wu-btn wu-btn-primary progress-button"
+  [ngClass]="{ 'show-progress': showProgress }"
+  (click)="onClickButton($event)"
+  [disabled]="disable"
+>
+  <div>
+    <app-progress-bar *ngIf="showProgress" [value]="value"></app-progress-bar>
+    <!-- <progress *ngIf="showProgress" max="100" [value]="value"></progress> -->
+  </div>
+  <ng-content></ng-content>
+</button>

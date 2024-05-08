@@ -1,0 +1,14 @@
+.container {
+  padding: 1em;
+
+  .section {
+    margin-top: 1em;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    row-gap: 1rem;
+  }
+}

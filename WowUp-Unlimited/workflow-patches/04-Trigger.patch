@@ -1,0 +1,12 @@
+--- .github/workflows/electron-all-build.yml
++++ .github/workflows/electron-all-build.yml
+@@ -1,7 +1,8 @@
+ name: Build WowUp Electron All
+ on:
+-  # - push
++  push:
+   workflow_dispatch:
++  workflow_call:
+ 
+ jobs:
+   # create-release:

@@ -1,0 +1,315 @@
+--- wowup-electron/src/app/components/common/curse-migration-dialog/curse-migration-dialog.component.html
++++ wowup-electron/src/app/components/common/curse-migration-dialog/curse-migration-dialog.component.html
+@@ -0,0 +1,47 @@
++<h1 mat-dialog-title class="icon-header">
++  <mat-icon class="mr-2 text-warning" svgIcon="fas:triangle-exclamation"></mat-icon
++  >{{ "DIALOGS.CURSE_MIGRATION.TITLE" | translate }}
++</h1>
++<div mat-dialog-content #dialogContent>
++  <p class="changelog" [innerHtml]="'DIALOGS.CURSE_MIGRATION.MESSAGE' | translate"></p>
++  <div *ngIf="isBusy$ | async" class="col justify-content-center align-items-center">
++    <mat-spinner diameter="50"></mat-spinner>
++    <p>{{ "APP.STATUS_TEXT.ADDON_SCAN_STARTED" | translate }}</p>
++  </div>
++</div>
++<div *ngIf="autoComplete$ | async" class="text-center">
++  <h3>{{ "DIALOGS.CURSE_MIGRATION.RE_SCAN_SUCCESS" | translate }}</h3>
++</div>
++<div *ngIf="autoError$ | async" class="text-center">
++  <h3 class="text-warning">{{ "DIALOGS.CURSE_MIGRATION.RE_SCAN_ERROR" | translate }}</h3>
++</div>
++<div mat-dialog-actions align="end">
++  <button
++    *ngIf="autoComplete$ | async"
++    mat-raised-button
++    color="primary"
++    [disabled]="isBusy$ | async"
++    (click)="onNoClick()"
++  >
++    {{ "DIALOGS.ALERT.POSITIVE_BUTTON" | translate }}
++  </button>
++  <button
++    *ngIf="autoIncomplete$ | async"
++    mat-raised-button
++    color="secondary"
++    [disabled]="isBusy$ | async"
++    (click)="onNoClick()"
++  >
++    {{ "DIALOGS.CURSE_MIGRATION.NEGATIVE_BUTTON" | translate }}
++  </button>
++  <button
++    *ngIf="autoIncomplete$ | async"
++    mat-raised-button
++    color="primary"
++    cdkFocusInitial
++    [disabled]="isBusy$ | async"
++    (click)="onAutomaticClick()"
++  >
++    {{ "DIALOGS.CURSE_MIGRATION.POSITIVE_BUTTON" | translate }}
++  </button>
++</div>
+--- wowup-electron/src/app/components/common/curse-migration-dialog/curse-migration-dialog.component.scss
++++ wowup-electron/src/app/components/common/curse-migration-dialog/curse-migration-dialog.component.scss
+@@ -0,0 +1,4 @@
++.icon-header {
++  display: flex;
++  align-items: center;
++}
+--- wowup-electron/src/app/components/common/curse-migration-dialog/curse-migration-dialog.component.ts
++++ wowup-electron/src/app/components/common/curse-migration-dialog/curse-migration-dialog.component.ts
+@@ -0,0 +1,84 @@
++import { AfterViewChecked, Component, ElementRef, ViewChild } from "@angular/core";
++import { MatDialogRef } from "@angular/material/dialog";
++import { BehaviorSubject, map } from "rxjs";
++import { ADDON_PROVIDER_CURSEFORGEV2 } from "../../../../common/constants";
++import { AddonService } from "../../../services/addons/addon.service";
++import { LinkService } from "../../../services/links/link.service";
++import { SessionService } from "../../../services/session/session.service";
++import { WarcraftInstallationService } from "../../../services/warcraft/warcraft-installation.service";
++import { formatDynamicLinks } from "../../../utils/dom.utils";
++
++export interface ConsentDialogResult {
++  telemetry: boolean;
++  wagoProvider: boolean;
++}
++
++@Component({
++  selector: "app-curse-migration-dialog",
++  templateUrl: "./curse-migration-dialog.component.html",
++  styleUrls: ["./curse-migration-dialog.component.scss"],
++})
++export class CurseMigrationDialogComponent implements AfterViewChecked {
++  @ViewChild("dialogContent", { read: ElementRef }) public dialogContent!: ElementRef;
++
++  public readonly isBusy$ = new BehaviorSubject<boolean>(false);
++  public readonly autoError$ = new BehaviorSubject<Error | undefined>(undefined);
++  public readonly autoComplete$ = new BehaviorSubject<boolean>(false);
++  public readonly autoIncomplete$ = this.autoComplete$.pipe(map((complete) => !complete));
++
++  public constructor(
++    public dialogRef: MatDialogRef<CurseMigrationDialogComponent>,
++    private _addonService: AddonService,
++    private _linkService: LinkService,
++    private _sessionService: SessionService,
++    private _warcraftInstallationService: WarcraftInstallationService
++  ) {}
++
++  public ngAfterViewChecked(): void {
++    const descriptionContainer: HTMLDivElement = this.dialogContent?.nativeElement;
++    formatDynamicLinks(descriptionContainer, this.onOpenLink);
++  }
++
++  public onNoClick(): void {
++    this.dialogRef.close();
++  }
++
++  public async onAutomaticClick(): Promise<void> {
++    this.isBusy$.next(true);
++
++    try {
++      // Fetch all installations
++      let scanCompleted = false;
++      const wowInstallations = await this._warcraftInstallationService.getWowInstallationsAsync();
++      for (const wowInstall of wowInstallations) {
++        // If there are any old Curse addons, re-scan that installation
++        let addons = await this._addonService.getAddons(wowInstall);
++        addons = addons.filter(
++          (addon) =>
++            addon.isIgnored === false &&
++            (addon.providerName === ADDON_PROVIDER_CURSEFORGEV2)
++        );
++        if (addons.length > 0) {
++          await this._addonService.rescanInstallation(wowInstall);
++          scanCompleted = true;
++        }
++      }
++
++      if (scanCompleted) {
++        this._sessionService.rescanCompleted();
++      }
++    } catch (e) {
++      console.error(e);
++      this.autoError$.next(e as Error);
++    } finally {
++      this.isBusy$.next(false);
++      this.autoComplete$.next(true);
++    }
++  }
++
++  private onOpenLink = (element: HTMLAnchorElement): boolean => {
++    this._linkService.confirmLinkNavigation(element.href).subscribe();
++
++    return false;
++  };
++}
+--- wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.html
++++ wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.html
+@@ -27,6 +27,15 @@
+     </div>
+   </div>
+ 
++  <div>
++    <div class="divider"></div>
++    <div class="setting row align-items-center">
++      <button mat-flat-button color="primary" (click)="openCurseMigrationDialog()">
++        {{ "PAGES.OPTIONS.ADDON.CURSE_MIGRATION_BUTTON" | translate }}
++      </button>
++    </div>
++  </div>
++
+   <form #prefForm [formGroup]="preferenceForm">
+     <div class="divider"></div>
+     <div class="setting row align-items-center">
+--- wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
++++ wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
+@@ -34,6 +34,8 @@
+ import { SensitiveStorageService } from "../../../services/storage/sensitive-storage.service";
+ 
+ import { AddonProviderType } from "wowup-lib-core";
++import { CurseMigrationDialogComponent } from "../../../components/common/curse-migration-dialog/curse-migration-dialog.component";
++import { MatDialog } from "@angular/material/dialog";
+ 
+ interface AddonProviderStateModel extends AddonProviderState {
+   adRequired: boolean;
+@@ -59,6 +61,7 @@
+   });
+ 
+   public constructor(
++    private _dialog: MatDialog,
+     private _addonProviderService: AddonProviderFactory,
+     private _sensitiveStorageService: SensitiveStorageService,
+     private _translateService: TranslateService,
+@@ -104,6 +107,12 @@
+     this.loadSensitiveData().catch(console.error);
+   }
+ 
++  public openCurseMigrationDialog = (): void => {
++    this._dialog.open(CurseMigrationDialogComponent, {
++      disableClose: true,
++    });
++  };
++
+   public ngAfterViewChecked(): void {
+     // formatDynamicLinks(descriptionContainer, this.onOpenLink);
+   }
+--- wowup-electron/src/app/modules/common-ui.module.ts
++++ wowup-electron/src/app/modules/common-ui.module.ts
+@@ -7,12 +7,13 @@
+ import { AnimatedLogoComponent } from "../components/common/animated-logo/animated-logo.component";
+ import { CellWrapTextComponent } from "../components/common/cell-wrap-text/cell-wrap-text.component";
+ import { CenteredSnackbarComponent } from "../components/common/centered-snackbar/centered-snackbar.component";
+ import { ClientSelectorComponent } from "../components/common/client-selector/client-selector.component";
+ import { ConfirmDialogComponent } from "../components/common/confirm-dialog/confirm-dialog.component";
+ import { ConsentDialogComponent } from "../components/common/consent-dialog/consent-dialog.component";
++import { CurseMigrationDialogComponent } from "../components/common/curse-migration-dialog/curse-migration-dialog.component";
+ import { ExternalUrlConfirmationDialogComponent } from "../components/common/external-url-confirmation-dialog/external-url-confirmation-dialog.component";
+ import { PatchNotesDialogComponent } from "../components/common/patch-notes-dialog/patch-notes-dialog.component";
+ import { ProgressButtonComponent } from "../components/common/progress-button/progress-button.component";
+ import { TelemetryDialogComponent } from "../components/common/telemetry-dialog/telemetry-dialog.component";
+ import { WebViewComponent } from "../components/common/webview/webview.component";
+ import { ProgressSpinnerComponent } from "../components/progress-spinner/progress-spinner.component";
+@@ -32,12 +33,13 @@
+     PatchNotesDialogComponent,
+     TelemetryDialogComponent,
+     ConsentDialogComponent,
+     CellWrapTextComponent,
+     CenteredSnackbarComponent,
+     ClientSelectorComponent,
++    CurseMigrationDialogComponent,
+     WebViewComponent,
+   ],
+   imports: [CommonModule, FormsModule, TranslateModule, MatModule, PipesModule, ReactiveFormsModule],
+   exports: [
+     ProgressSpinnerComponent,
+     ProgressButtonComponent,
+@@ -49,10 +51,11 @@
+     PatchNotesDialogComponent,
+     TelemetryDialogComponent,
+     ConsentDialogComponent,
+     CellWrapTextComponent,
+     CenteredSnackbarComponent,
+     ClientSelectorComponent,
++    CurseMigrationDialogComponent,
+     WebViewComponent,
+   ],
+ })
+ export class CommonUiModule {}
+--- wowup-electron/src/app/services/session/session.service.ts
++++ wowup-electron/src/app/services/session/session.service.ts
+@@ -60,12 +60,14 @@
+   public readonly wowUpAuthenticated$ = this.wowUpAccount$.pipe(map((account) => account !== undefined));
+ 
+   public set myAddonsCompactVersion(val: boolean) {
+     this._myAddonsCompactVersionSrc.next(val);
+   }
+ 
++  public didPromptCfMigration = true;
++
+   public constructor(
+     private _warcraftInstallationService: WarcraftInstallationService,
+     private _preferenceStorageService: PreferenceStorageService,
+     private _wowUpAccountService: WowUpAccountService,
+     private _wowUpService: WowUpService,
+     private _addonService: AddonService,
+--- wowup-electron/src/app/app.component.ts
++++ wowup-electron/src/app/app.component.ts
+@@ -19,6 +19,7 @@
+ import { TranslateService } from "@ngx-translate/core";
+ 
+ import {
++  ADDON_PROVIDER_CURSEFORGEV2,
+   ALLIANCE_LIGHT_THEME,
+   ALLIANCE_THEME,
+   CURRENT_THEME_KEY,
+@@ -61,6 +62,7 @@
+   ConsentDialogResult,
+ } from "./components/common/consent-dialog/consent-dialog.component";
+ import { WowUpProtocolService } from "./services/wowup/wowup-protocol.service";
++import { CurseMigrationDialogComponent } from "./components/common/curse-migration-dialog/curse-migration-dialog.component";
+ import { Addon } from "wowup-lib-core";
+ import { LinkService } from "./services/links/link.service";
+ 
+@@ -285,6 +287,15 @@
+       }
+ 
+       this.showPreLoad$.next(false);
++
++      if (!this.sessionService.didPromptCfMigration) {
++        // If the user has any addons from old Curse that are not ignored prompt them to rescan
++        let cfAddons = await this._addonService.getProviderAddons(ADDON_PROVIDER_CURSEFORGEV2);
++        cfAddons = cfAddons.filter((addon) => addon.isIgnored === false);
++        if (cfAddons.length > 0) {
++          this.openCurseMigrationDialog();
++        }
++      }
+     } catch (e) {
+       console.error(e);
+     }
+@@ -318,6 +329,17 @@
+     this.openInstallFromUrlDialog(path);
+   };
+ 
++  public openCurseMigrationDialog(): void {
++    const dialogRef = this._dialog.open(CurseMigrationDialogComponent, {
++      disableClose: true,
++    });
++
++    dialogRef.afterClosed().subscribe(() => {
++      this.sessionService.didPromptCfMigration = true;
++      this.showRequiredDialogs().catch((e) => console.error(e));
++    });
++  }
++
+   public openConsentDialog(): void {
+     const dialogRef = this._dialog.open(ConsentDialogComponent, {
+       disableClose: true,
+--- wowup-electron/src/assets/i18n/en.json
++++ wowup-electron/src/assets/i18n/en.json
+@@ -501,6 +501,7 @@
+           "INSERT_API_KEY": "Insert Default CurseForge API Key",
+           "PROVIDER_NOTE": "API Key Required"
+         },
++        "CURSE_MIGRATION_BUTTON": "CurseForge Migration",
+         "ENABLED_PROVIDERS": {
+           "DESCRIPTION": "Select which providers may be used to search for, and install new addons",
+           "FIELD_LABEL": "Enabled Addon Providers",
