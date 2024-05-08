@@ -72,15 +72,15 @@
  }
 --- wowup-electron/package-lock.json
 +++ wowup-electron/package-lock.json
-@@ -55,14 +55,12 @@
+@@ -54,14 +54,12 @@
          "@fortawesome/free-regular-svg-icons": "6.4.2",
          "@fortawesome/free-solid-svg-icons": "6.4.2",
          "@messageformat/core": "3.2.0",
          "@microsoft/applicationinsights-web": "3.0.5",
          "@ngx-translate/core": "15.0.0",
          "@ngx-translate/http-loader": "8.0.0",
--        "@overwolf/ow-electron": "22.3.27",
--        "@overwolf/ow-electron-builder": "24.7.0",
+-        "@overwolf/ow-electron": "28.2.5",
+-        "@overwolf/ow-electron-builder": "24.13.4",
          "@types/adm-zip": "0.5.1",
          "@types/flat": "5.0.2",
          "@types/globrex": "0.1.2",
@@ -137,15 +137,15 @@
      "i18n": "sync-i18n --files ./src/assets/i18n/*.json --primary en --space 2 --finalnewline --lineendings CRLF --languages cs de es fr it nb pt ru zh zh-TW ko pl",
      "check-i18n": "npm run i18n -- --check",
      "pretty": "npx prettier --write . && ng lint --fix",
-@@ -103,14 +103,12 @@
+@@ -102,14 +102,12 @@
      "@fortawesome/free-regular-svg-icons": "6.4.2",
      "@fortawesome/free-solid-svg-icons": "6.4.2",
      "@messageformat/core": "3.2.0",
      "@microsoft/applicationinsights-web": "3.0.5",
      "@ngx-translate/core": "15.0.0",
      "@ngx-translate/http-loader": "8.0.0",
--    "@overwolf/ow-electron": "22.3.27",
--    "@overwolf/ow-electron-builder": "24.7.0",
+-    "@overwolf/ow-electron": "28.2.5",
+-    "@overwolf/ow-electron-builder": "24.13.4",
      "@types/adm-zip": "0.5.1",
      "@types/flat": "5.0.2",
      "@types/globrex": "0.1.2",

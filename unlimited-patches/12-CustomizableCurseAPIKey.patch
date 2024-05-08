@@ -7,23 +7,23 @@
  import { v4 as uuidv4 } from "uuid";
  import {
    Addon,
-@@ -29,6 +30,7 @@
+@@ -32,6 +33,7 @@
    ADDON_PROVIDER_CURSEFORGE,
    NO_LATEST_SEARCH_RESULT_FILES_ERROR,
    NO_SEARCH_RESULTS_ERROR,
 +  PREF_CF2_API_KEY,
  } from "../../common/constants";
- import { getWowClientGroup } from "../../common/warcraft";
  import { AppConfig } from "../../environments/environment";
-@@ -38,6 +40,7 @@
- import * as AddonUtils from "../utils/addon.utils";
+ import { CachingService } from "../services/caching/caching-service";
+@@ -39,6 +41,7 @@
+ import { TocService } from "../services/toc/toc.service";
  import { strictFilter } from "../utils/array.utils";
  import { TocNotFoundError } from "../errors";
 +import { SensitiveStorageService } from "../services/storage/sensitive-storage.service";
  
  interface ProtocolData {
    addonId: number;
-@@ -73,7 +76,7 @@
+@@ -79,7 +82,7 @@
  
  export class CurseAddonProvider extends AddonProvider {
    private readonly _circuitBreaker: CircuitBreakerWrapper;
@@ -32,7 +32,7 @@
  
    public readonly name = ADDON_PROVIDER_CURSEFORGE;
    public readonly forceIgnore = false;
-@@ -89,6 +92,7 @@
+@@ -95,6 +98,7 @@
      private _cachingService: CachingService,
      private _networkService: NetworkService,
      private _tocService: TocService,
@@ -40,7 +40,7 @@
    ) {
      super();
  
-@@ -98,8 +102,9 @@
+@@ -104,8 +108,9 @@
        AppConfig.curseforge.httpTimeoutMs,
      );
  
@@ -52,7 +52,7 @@
      });
    }
  
-@@ -344,13 +349,18 @@
+@@ -350,13 +355,18 @@
        return;
      }
  
@@ -72,7 +72,7 @@
      const fingerprintData = result.data?.data;
      try {
        const matchPairs: ScanMatchPair[] = [];
-@@ -378,7 +388,7 @@
+@@ -383,7 +393,7 @@
        }
  
        const addonIds = matchPairs.map((mp) => mp.match.id);
@@ -81,7 +81,7 @@
        const addonResultData = getAddonsResult.data?.data;
  
        const potentialChildren: ScanMatchPair[] = [];
-@@ -423,12 +433,13 @@
+@@ -428,12 +438,13 @@
      externalReleaseId: string,
    ): Promise<string> {
      try {
@@ -96,7 +96,7 @@
          },
          CHANGELOG_CACHE_TTL_SEC,
        );
-@@ -443,11 +454,13 @@
+@@ -448,11 +459,13 @@
  
    public override async getDescription(installation: WowInstallation, externalId: string): Promise<string> {
      try {
@@ -111,7 +111,7 @@
          },
          CHANGELOG_CACHE_TTL_SEC,
        );
-@@ -624,8 +637,9 @@
+@@ -629,8 +642,9 @@
    }
  
    private async getAddonFileById(addonId: string | number, fileId: string | number): Promise<cfv2.CF2File | undefined> {
@@ -122,7 +122,7 @@
      );
  
      return response.data?.data;
-@@ -633,7 +647,8 @@
+@@ -638,7 +652,8 @@
  
    private async getByIdBase(addonId: string): Promise<cfv2.CF2Addon | undefined> {
      try {
@@ -132,7 +132,7 @@
        return response.data?.data;
      } catch (e) {
        // We want to eat things like 400/500 responses
-@@ -811,12 +826,19 @@
+@@ -818,12 +833,19 @@
        modIds: addonIds,
      };
  
@@ -153,7 +153,7 @@
      const gameVersionTypeId = this.getGameVersionTypeId(wowInstallation.clientType);
  
      const request: cfv2.CF2GetFeaturedModsRequest = {
-@@ -828,7 +850,7 @@
+@@ -835,7 +857,7 @@
      const cacheKey = `getFeaturedAddonList-${JSON.stringify(request)}`;
      const result = await this._cachingService.transaction(
        cacheKey,
@@ -162,7 +162,7 @@
        FEATURED_ADDONS_CACHE_TTL_SEC,
      );
  
-@@ -861,7 +883,8 @@
+@@ -868,7 +890,8 @@
        gameVersionTypeId: this.getCFGameVersionType(clientType),
      };
  
@@ -172,7 +172,7 @@
  
      return response.data?.data || [];
    }
-@@ -904,10 +927,29 @@
+@@ -911,10 +934,29 @@
  
      const cacheKey = JSON.stringify(request);
  
@@ -296,7 +296,7 @@
      } catch (e) {
 --- wowup-electron/src/assets/i18n/en.json
 +++ wowup-electron/src/assets/i18n/en.json
-@@ -497,6 +497,7 @@
+@@ -498,6 +498,7 @@
          "CURSE_FORGE_V2": {
            "API_KEY_DESCRIPTION": "If you have requested a CurseForge API key you can input it here to connect to their API.",
            "API_KEY_TITLE": "CurseForge API Key",

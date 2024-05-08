@@ -305,7 +305,7 @@
        disableClose: true,
 --- wowup-electron/src/assets/i18n/en.json
 +++ wowup-electron/src/assets/i18n/en.json
-@@ -500,6 +500,7 @@
+@@ -501,6 +501,7 @@
            "INSERT_API_KEY": "Insert Default CurseForge API Key",
            "PROVIDER_NOTE": "API Key Required"
          },

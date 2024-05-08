@@ -1,6 +1,6 @@
 --- wowup-electron/src/app/addon-providers/wago-addon-provider.ts
 +++ wowup-electron/src/app/addon-providers/wago-addon-provider.ts
-@@ -167,12 +167,14 @@
+@@ -165,12 +165,14 @@
  const WAGO_SEARCH_CACHE_TIME_SEC = 60;
  const WAGO_DETAILS_CACHE_TIME_SEC = 60;
  const WAGO_FEATURED_ADDONS_CACHE_TIME_SEC = 60;
@@ -15,7 +15,7 @@
  
    // This is our internal http queue, prevents duplicated requests for some routes
    private _requestQueue: Map<string, Promise<any>> = new Map();
-@@ -181,7 +183,7 @@
+@@ -179,7 +181,7 @@
    public readonly forceIgnore = false;
    public enabled = true;
    public authRequired = true;
@@ -24,7 +24,7 @@
    public allowEdit = true;
    public allowReinstall = true;
    public allowChannelChange = true;
-@@ -210,11 +212,13 @@
+@@ -208,11 +210,13 @@
        .pipe(filter((change) => change.key == PREF_WAGO_ACCESS_KEY))
        .subscribe((change) => {
          console.log("[wago] wago secret set", change);
@@ -38,7 +38,7 @@
          }
        });
  
-@@ -223,12 +227,15 @@
+@@ -221,12 +225,15 @@
        .pipe(
          first(),
          tap((accessKey) => {
@@ -55,7 +55,7 @@
          }),
          catchError((e) => {
            console.error("[wago] failed to load secret key", e);
-@@ -763,6 +770,28 @@
+@@ -762,6 +769,28 @@
      }
    }
  

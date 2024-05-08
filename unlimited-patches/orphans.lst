@@ -6,4 +6,5 @@ wowup-electron/src/app/addon-providers/curse-addon-provider.ts
 wowup-electron/src/app/components/options/options-curseforge-section/options-curseforge-section.component.html
 wowup-electron/src/app/components/options/options-curseforge-section/options-curseforge-section.component.scss
 wowup-electron/src/app/components/options/options-curseforge-section/options-curseforge-section.component.ts
+wowup-electron/src/app/utils/markdown.utlils.ts
 wowup-electron/src/common/curse/curse-models.ts

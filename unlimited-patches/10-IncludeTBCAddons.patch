@@ -1,9 +1,6 @@
 --- wowup-electron/src/app/addon-providers/curse-addon-provider.ts
 +++ wowup-electron/src/app/addon-providers/curse-addon-provider.ts
-@@ -53,23 +53,23 @@
- const CHANGELOG_CACHE_TTL_SEC = 30 * 60;
- const FEATURED_ADDONS_CACHE_TTL_SEC = AppConfig.featuredAddonsCacheTimeSec;
- 
+@@ -57,22 +57,22 @@
  const GAME_TYPE_LISTS = [
    {
      flavor: "wow_classic",
@@ -15,7 +12,7 @@
      flavor: "wow-wrath-classic",
 -    typeId: 73713,
 +    typeId: [73713, 73246],
-     matches: [WowClientType.Classic, WowClientType.ClassicPtr, WowClientType.ClassicBeta],
+     matches: [],
    },
    {
      flavor: "wow_retail",
@@ -23,14 +20,14 @@
 +    typeId: [517],
      matches: [WowClientType.Retail, WowClientType.RetailPtr, WowClientType.Beta, WowClientType.RetailXPtr],
    },
+   {
+     flavor: "wow-cataclysm-classic",
+-    typeId: 77522,
++    typeId: [77522, 73713, 73246],
+     matches: [WowClientType.Classic, WowClientType.ClassicPtr, WowClientType.ClassicBeta],
+   },
  ];
- 
- export class CurseAddonProvider extends AddonProvider {
-   private readonly _circuitBreaker: CircuitBreakerWrapper;
-@@ -480,13 +480,13 @@
-   private getGameVersionTypeId(clientType: WowClientType): number {
-     const gameType = GAME_TYPE_LISTS.find((gtl) => gtl.matches.includes(clientType));
-     if (!gameType) {
+@@ -488,7 +488,7 @@
        throw new Error(`Game type not found: ${clientType}`);
      }
  
@@ -39,13 +36,7 @@
    }
  
    private hasSortableGameVersion(file: cfv2.CF2File, typeId: number): boolean {
-     if (!file?.sortableGameVersions) {
-       console.debug("sortableGameVersions missing", file);
-     }
-@@ -792,13 +792,13 @@
-     }
-   }
- 
+@@ -802,7 +802,7 @@
    private getValidClientTypes(file: cfv2.CF2File): WowClientType[] {
      const gameVersions: WowClientType[] = _.flatten(
        GAME_TYPE_LISTS.filter((type) =>
@@ -53,7 +44,4 @@
 +        file.sortableGameVersions.find((sgv) => type.typeId.includes(sgv.gameVersionTypeId))
        ).map((game) => game.matches),
      );
- 
-     return _.uniq(gameVersions);
-   }
  
