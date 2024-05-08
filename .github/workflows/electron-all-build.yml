@@ -1,0 +1,139 @@
+name: Build WowUp Electron All - WowUp:v2.12.0 WowUp.CF:v2.12.0 - v2.12.0
+on:
+  push:
+  workflow_dispatch:
+  workflow_call:
+
+defaults:
+  run:
+    shell: bash
+jobs:
+  # create-release:
+  #   name: Create Release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Create Release
+  #       id: create_release
+  #       uses: actions/create-release@v1
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+  #       with:
+  #         tag_name: ${{ github.ref }}
+  #         release_name: Release ${{ github.ref }}
+  #         draft: true
+  #         prerelease: true
+
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    env:
+      wowup_branch: 'v2.12.0'
+      wowupcf_branch: 'v2.12.0'
+      release_name: 'v2.12.0'
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest,"macos-11"]
+        node-version: [20.x]
+
+    steps:
+      - name: Initialize git config
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email noreply@github.com
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+      - name: Checkout WowUp-Unlimited
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: 'main'
+          path: 'WowUp-Unlimited'
+      - name: Checkout WowUp-Unlimited Orphan
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: '${{ env.release_name }}-Src'
+          path: 'WowUp-Unlimited-Src'
+      - name: Checkout WowUp
+        uses: actions/checkout@v3
+        with:
+          repository: 'WowUp/WowUp'
+          ref: ${{ env.wowup_branch }}
+          path: 'WowUp'
+          fetch-depth: 0
+      - name: Checkout WowUp.CF
+        uses: actions/checkout@v3
+        with:
+          repository: 'WowUp/WowUp.CF'
+          ref: ${{ env.wowupcf_branch }}
+          path: 'WowUp.CF'
+          fetch-depth: 0
+
+      - name: Install GNU patch
+        if: matrix.os == 'macos-11'
+        run: brew install gpatch
+
+      - name: WowUp Unlimited Merge
+        run: WowUp-Unlimited/merge.sh
+        
+      - name: Commit WowUp Unlimited Patched Source
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd ./WowUp-Unlimited-Src
+          cp -af ../WowUp WowUp
+          cp -af ../WowUp-Unlimited WowUp-Unlimited
+          cp -af .github/workflows/electron-all-build.yml WowUp/.github/workflows/electron-all-build.yml
+          rm -rf WowUp/.git
+          rm -rf WowUp-Unlimited/.git
+          git add WowUp WowUp-Unlimited
+          git commit -a -m "WowUp-Unlimited ${{ env.release_name }}"
+          git tag -d "${{ env.release_name }}" || true
+          git tag "${{ env.release_name }}"
+          git push --force origin "${{ env.release_name }}-Src"
+          git push --tags --force origin "${{ env.release_name }}"
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Inject Token
+        env:
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: |
+          cd ./WowUp/wowup-electron
+          node ./inject-token.js
+
+      - name: Install Angular CLI
+        run: npm install -g @angular/cli
+
+      - name: dmg-license
+        if: matrix.os == 'macos-11'
+        run: |
+          cd ./WowUp/wowup-electron
+          npm i dmg-license
+
+      - name: Build Linux App
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        run: |
+          cd ./WowUp/wowup-electron
+          npm i
+          npm run electron:publish:vanilla
+
+      - name: Build Mac App
+        if: matrix.os == 'macos-11'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          cd ./WowUp/wowup-electron
+          npm i
+          npm run electron:publish:vanilla
+
+      - name: Build Windows App
+        if: matrix.os == 'windows-latest'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        run: cd ./WowUp/wowup-electron && npm i && npm run electron:publish
