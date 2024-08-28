@@ -1,6 +1,6 @@
 ﻿--- wowup-electron/package.json
 +++ wowup-electron/package.json
-@@ -7,13 +7,13 @@
+@@ -8,13 +8,13 @@
      "wow",
      "world of warcraft"
    ],
@@ -15,3 +15,16 @@
      "email": "zakrn@wowup.io"
    },
    "main": "app/main.js",
+--- wowup-electron/app-env/inject-env.js
++++ wowup-electron/app-env/inject-env.js
+@@ -20,9 +20,9 @@
+ let packageData = fs.readFileSync(packagePath, "utf8");
+ let packageJson = JSON.parse(packageData);
+ 
+ packageJson.name = process.env.BUILD_FLAVOR === "ow" ? "wowup-cf" : "wowup";
+ packageJson.productName = process.env.BUILD_FLAVOR === "ow" ? "WowUpCf" : "WowUp";
+ packageJson.repository.url =
+-  process.env.BUILD_FLAVOR === "ow" ? "https://github.com/WowUp/WowUp.CF.git" : "https://github.com/WowUp/WowUp.git";
++  process.env.BUILD_FLAVOR === "ow" ? "https://github.com/WowUp/WowUp.CF.git" : "https://github.com/DigitalDJ/WowUp-Unlimited.git";
+ 
+ fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2));

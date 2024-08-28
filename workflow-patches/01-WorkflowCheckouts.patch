@@ -1,7 +1,7 @@
 --- .github/workflows/electron-all-build.yml
 +++ .github/workflows/electron-all-build.yml
-@@ -27,11 +27,39 @@
-         os: [ubuntu-latest, windows-latest,"macos-11"]
+@@ -27,11 +27,32 @@
+         os: [ubuntu-latest, windows-latest,"macos-latest"]
          node-version: [20.x]
  
 -    steps:
@@ -32,13 +32,6 @@
 +          repository: 'WowUp/WowUp'
 +          ref: ${{ env.wowup_branch }}
 +          path: 'WowUp'
-+          fetch-depth: 0
-+      - name: Checkout WowUp.CF
-+        uses: actions/checkout@v3
-+        with:
-+          repository: 'WowUp/WowUp.CF'
-+          ref: ${{ env.wowupcf_branch }}
-+          path: 'WowUp.CF'
 +          fetch-depth: 0
  
        - name: Use Node.js ${{ matrix.node-version }}

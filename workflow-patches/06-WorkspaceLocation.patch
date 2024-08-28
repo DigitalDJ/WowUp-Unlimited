@@ -1,15 +1,15 @@
 --- .github/workflows/electron-all-build.yml
 +++ .github/workflows/electron-all-build.yml
-@@ -87,7 +87,7 @@
+@@ -79,7 +79,7 @@
        - name: dmg-license
-         if: matrix.os == 'macos-11'
+         if: matrix.os == 'macos-latest'
          run: |
 -          cd ./wowup-electron
 +          cd ./WowUp/wowup-electron
            npm i dmg-license
  
        - name: Build Linux App
-@@ -95,7 +95,7 @@
+@@ -87,7 +87,7 @@
          env:
            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
          run: |
@@ -18,7 +18,7 @@
            npm i
            npm run electron:publish
  
-@@ -109,7 +109,7 @@
+@@ -101,7 +101,7 @@
            NOTARIZE_APPLE_PASSWORD: ${{ secrets.NOTARIZE_APPLE_PASSWORD }}
            NOTARIZE_APPLE_TEAM_ID: ${{ secrets.NOTARIZE_APPLE_TEAM_ID }}
          run: |
@@ -27,7 +27,7 @@
            npm i
            npm run electron:publish
  
-@@ -119,4 +119,4 @@
+@@ -111,4 +111,4 @@
            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
            CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
            CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}

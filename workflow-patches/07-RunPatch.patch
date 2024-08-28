@@ -1,15 +1,15 @@
 --- .github/workflows/electron-all-build.yml
 +++ .github/workflows/electron-all-build.yml
-@@ -69,6 +69,29 @@
-         with:
+@@ -61,6 +61,29 @@
+           path: 'WowUp'
            fetch-depth: 0
  
 +      - name: Install GNU patch
-+        if: matrix.os == 'macos-11'
++        if: matrix.os == 'macos-latest'
 +        run: brew install gpatch
 +
-+      - name: WowUp Unlimited Merge
-+        run: WowUp-Unlimited/merge.sh
++      - name: WowUp Unlimited Patch
++        run: WowUp-Unlimited/patch.sh
 +        
 +      - name: Commit WowUp Unlimited Patched Source
 +        if: matrix.os == 'ubuntu-latest'

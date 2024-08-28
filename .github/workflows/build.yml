@@ -6,10 +6,6 @@ on:
         description: 'WowUp Branch'
         default: 'master'
         required: true
-      wowupcf_branch:
-        description: 'WowUp.CF Branch'
-        default: 'main'
-        required: true
       release_name:
         description: 'WowUp Unlimited Release'
         default: 'vX.X.X'
@@ -56,14 +52,13 @@ jobs:
           patch -p0 < ./WowUp-Unlimited/workflow-patches/04-Trigger.patch
           patch -p0 < ./WowUp-Unlimited/workflow-patches/05-Env.patch
           patch -p0 < ./WowUp-Unlimited/workflow-patches/06-WorkspaceLocation.patch
-          patch -p0 < ./WowUp-Unlimited/workflow-patches/07-RunMerge.patch
+          patch -p0 < ./WowUp-Unlimited/workflow-patches/07-RunPatch.patch
           patch -p0 < ./WowUp-Unlimited/workflow-patches/08-DisableCodeSigning.patch
           patch -p0 < ./WowUp-Unlimited/workflow-patches/09-WorkflowName.patch
           
           sed -i "s/WOWUP_BRANCH/${{ inputs.wowup_branch }}/g" .github/workflows/electron-all-build.yml
-          sed -i "s/WOWUPCF_BRANCH/${{ inputs.wowupcf_branch }}/g" .github/workflows/electron-all-build.yml
           sed -i "s/RELEASE_NAME/${{ inputs.release_name }}/g" .github/workflows/electron-all-build.yml
           
           git add .github/workflows/electron-all-build.yml
-          git commit -m "Patched WowUp Build Workflow: WowUp ${{ inputs.wowup_branch }} WowUp.CF ${{ inputs.wowupcf_branch }}"
+          git commit -m "Patched WowUp Build Workflow: WowUp ${{ inputs.wowup_branch }}"
           git push --force origin "${{ inputs.release_name }}-Src"

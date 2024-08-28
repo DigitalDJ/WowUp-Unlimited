@@ -16,7 +16,7 @@
          run: |
            cd ./wowup-electron
            npm i
-           npm run electron:publish:vanilla
+           npm run electron:publish
 --- .github/workflows/electron-windows-build.yml
 +++ .github/workflows/electron-windows-build.yml
 @@ -49,9 +49,7 @@
@@ -29,8 +29,8 @@
 -          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
 -          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
          run: cd ./wowup-electron && npm ci && npm run electron:publish
---- wowup-electron/electron-builder.json
-+++ wowup-electron/electron-builder.json
+--- wowup-electron/electron-build/electron-builder.json
++++ wowup-electron/electron-build/electron-builder.json
 @@ -9,13 +9,13 @@
    "publish": ["github"],
    "nodeGypRebuild": true,

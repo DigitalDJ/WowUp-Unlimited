@@ -12,7 +12,7 @@
  const envFiles = fs.readdirSync(environmentsPath);
 --- wowup-electron/gulpfile.js
 +++ wowup-electron/gulpfile.js
-@@ -58,7 +58,8 @@
+@@ -54,7 +54,8 @@
  }
  
  async function updateCfKey() {

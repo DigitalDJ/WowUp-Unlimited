@@ -1,7 +1,7 @@
 --- .github/workflows/electron-all-build.yml
 +++ .github/workflows/electron-all-build.yml
-@@ -126,11 +126,7 @@
-         if: matrix.os == 'macos-11'
+@@ -118,11 +118,7 @@
+         if: matrix.os == 'macos-latest'
          env:
            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
 -          CSC_LINK: ${{ secrets.MACOS_CERT }}
@@ -11,9 +11,9 @@
 -          NOTARIZE_APPLE_TEAM_ID: ${{ secrets.NOTARIZE_APPLE_TEAM_ID }}
 +          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
          run: |
-           cd ./wowup-electron
+           cd ./WowUp/wowup-electron
            npm i
-@@ -140,6 +136,4 @@
+@@ -132,6 +128,4 @@
          if: matrix.os == 'windows-latest'
          env:
            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token

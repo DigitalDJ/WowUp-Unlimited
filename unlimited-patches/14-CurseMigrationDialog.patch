@@ -162,16 +162,23 @@
      <div class="setting row align-items-center">
 --- wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
 +++ wowup-electron/src/app/components/options/options-addon-section/options-addon-section.component.ts
-@@ -34,6 +34,8 @@
- import { SensitiveStorageService } from "../../../services/storage/sensitive-storage.service";
+@@ -15,6 +15,7 @@
  
- import { AddonProviderType } from "wowup-lib-core";
-+import { CurseMigrationDialogComponent } from "../../../components/common/curse-migration-dialog/curse-migration-dialog.component";
+ import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from "@angular/core";
+ import { FormGroup, UntypedFormControl } from "@angular/forms";
 +import { MatDialog } from "@angular/material/dialog";
+ import { MatListOption, MatSelectionListChange } from "@angular/material/list";
+ import { TranslateService } from "@ngx-translate/core";
+ 
+@@ -30,6 +31,7 @@
+ import { DialogFactory } from "../../../services/dialog/dialog.factory";
+ import { SensitiveStorageService } from "../../../services/storage/sensitive-storage.service";
+ import { AppConfig } from "../../../../environments/environment";
++import { CurseMigrationDialogComponent } from "../../../components/common/curse-migration-dialog/curse-migration-dialog.component";
  
  interface AddonProviderStateModel extends AddonProviderState {
    adRequired: boolean;
-@@ -59,6 +61,7 @@
+@@ -56,6 +58,7 @@
    });
  
    public constructor(
@@ -179,7 +186,7 @@
      private _addonProviderService: AddonProviderFactory,
      private _sensitiveStorageService: SensitiveStorageService,
      private _translateService: TranslateService,
-@@ -104,6 +107,12 @@
+@@ -101,6 +104,12 @@
      this.loadSensitiveData().catch(console.error);
    }
  
@@ -189,9 +196,9 @@
 +    });
 +  };
 +
-   public ngAfterViewChecked(): void {
-     // formatDynamicLinks(descriptionContainer, this.onOpenLink);
-   }
+   public ngOnDestroy(): void {
+     this.destroy$.next(true);
+     this.destroy$.unsubscribe();
 --- wowup-electron/src/app/modules/common-ui.module.ts
 +++ wowup-electron/src/app/modules/common-ui.module.ts
 @@ -7,12 +7,13 @@
@@ -253,7 +260,7 @@
      private _addonService: AddonService,
 --- wowup-electron/src/app/app.component.ts
 +++ wowup-electron/src/app/app.component.ts
-@@ -19,6 +19,7 @@
+@@ -20,6 +20,7 @@
  import { TranslateService } from "@ngx-translate/core";
  
  import {
@@ -262,14 +269,14 @@
    ALLIANCE_THEME,
    CURRENT_THEME_KEY,
 @@ -61,6 +62,7 @@
-   ConsentDialogResult,
- } from "./components/common/consent-dialog/consent-dialog.component";
+ import { WarcraftInstallationService } from "./services/warcraft/warcraft-installation.service";
+ import { WowUpAddonService } from "./services/wowup/wowup-addon.service";
  import { WowUpProtocolService } from "./services/wowup/wowup-protocol.service";
 +import { CurseMigrationDialogComponent } from "./components/common/curse-migration-dialog/curse-migration-dialog.component";
- import { Addon } from "wowup-lib-core";
- import { LinkService } from "./services/links/link.service";
- 
-@@ -285,6 +287,15 @@
+ import { WowUpService } from "./services/wowup/wowup.service";
+ import { ZoomService } from "./services/zoom/zoom.service";
+ import { ZoomDirection } from "./utils/zoom.utils";
+@@ -291,6 +293,15 @@
        }
  
        this.showPreLoad$.next(false);
@@ -285,7 +292,7 @@
      } catch (e) {
        console.error(e);
      }
-@@ -318,6 +329,17 @@
+@@ -324,6 +335,17 @@
      this.openInstallFromUrlDialog(path);
    };
  
@@ -305,7 +312,7 @@
        disableClose: true,
 --- wowup-electron/src/assets/i18n/en.json
 +++ wowup-electron/src/assets/i18n/en.json
-@@ -501,6 +501,7 @@
+@@ -511,6 +511,7 @@
            "INSERT_API_KEY": "Insert Default CurseForge API Key",
            "PROVIDER_NOTE": "API Key Required"
          },

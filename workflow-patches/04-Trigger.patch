@@ -8,5 +8,5 @@
    workflow_dispatch:
 +  workflow_call:
  
- jobs:
-   # create-release:
+ defaults:
+   run:
