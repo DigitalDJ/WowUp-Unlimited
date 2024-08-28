@@ -1,0 +1,239 @@
+﻿--- .github/workflows/electron-linux-build.yml
++++ .github/workflows/electron-linux-build.yml
+@@ -39,17 +39,24 @@
+           node-version: ${{ matrix.node-version }}
+ 
+       - name: Setup Flatpak
+         if: matrix.os == 'ubuntu-latest'
+         run: sudo apt install flatpak flatpak-builder
+ 
++      - name: Inject Token
++        env:
++          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
++        run: |
++          cd ./wowup-electron
++          node ./inject-token.js
++
+       - name: Install Angular CLI
+         run: npm install -g @angular/cli
+ 
+       - name: Build Linux App
+         if: matrix.os == 'ubuntu-latest'
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+         run: |
+           cd ./wowup-electron
+           npm i
+           npm run electron:publish
+--- .github/workflows/electron-mac-build.yml
++++ .github/workflows/electron-mac-build.yml
+@@ -35,12 +35,19 @@
+ 
+       - name: Use Node.js ${{ matrix.node-version }}
+         uses: actions/setup-node@v2
+         with:
+           node-version: ${{ matrix.node-version }}
+ 
++      - name: Inject Token
++        env:
++          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
++        run: |
++          cd ./wowup-electron
++          node ./inject-token.js
++
+       - name: Install Angular CLI
+         run: npm install -g @angular/cli
+ 
+       - name: dmg-license
+         run: |
+           cd ./wowup-electron
+--- .github/workflows/electron-windows-build.yml
++++ .github/workflows/electron-windows-build.yml
+@@ -35,16 +35,23 @@
+ 
+       - name: Use Node.js ${{ matrix.node-version }}
+         uses: actions/setup-node@v2
+         with:
+           node-version: ${{ matrix.node-version }}
+ 
++      - name: Inject Token
++        env:
++          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
++        run: |
++          cd ./wowup-electron
++          node ./inject-token.js
++          
+       - name: Install Angular CLI
+         run: npm install -g @angular/cli
+ 
+       - name: Build Windows App
+         if: matrix.os == 'windows-latest'
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+           CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+         run: cd ./wowup-electron && npm ci && npm run electron:publish
+--- wowup-electron/src/app/components/common/footer/footer.component.html
++++ wowup-electron/src/app/components/common/footer/footer.component.html
+@@ -7,13 +7,13 @@
+     matTooltip="{{ 'PAGES.MY_ADDONS.PAGE_CONTEXT_FOOTER.JOIN_DISCORD' | translate }}">
+     <mat-icon class="tab-icon tab-icon-inactive" svgIcon="fab:discord"></mat-icon>
+   </a> -->
+   <p class="text-1">{{ sessionService.statusText$ | async }}</p>
+   <div class="flex-grow-1"></div>
+   <p class="mr-3">{{ sessionService.pageContextText$ | async }}</p>
+-  <p>v{{ versionNumber | async }} {{ isCurseForge ? "CF" : "" }}</p>
++  <p>v{{ versionNumber | async }} {{ false ? "CF" : "" }}</p>
+   <div class="h-100 ml-3" [ngSwitch]="appUpdateState$ | async">
+     <div *ngSwitchCase="appUpdateState.CheckingForUpdate">
+       <p>{{ "APP.WOWUP_UPDATE.CHECKING_FOR_UPDATE" | translate }}</p>
+     </div>
+     <div *ngSwitchCase="appUpdateState.UpdateAvailable">
+       <p>{{ "APP.WOWUP_UPDATE.UPDATE_AVAILABLE" | translate }}</p>
+--- wowup-electron/src/app/components/common/vertical-tabs/vertical-tabs.component.ts
++++ wowup-electron/src/app/components/common/vertical-tabs/vertical-tabs.component.ts
+@@ -178,18 +178,21 @@
+ 
+   public onClickTab(tabIndex: number): void {
+     this.sessionService.selectedHomeTab = tabIndex;
+   }
+ 
+   public onClickAdExplainer(): void {
+-    const dialogKey = this.isCurseForge ? "AD_EXPLAINER_DIALOG_CF" : "AD_EXPLAINER_DIALOG";
++    const dialogKeys = [ "AD_EXPLAINER_DIALOG", "AD_EXPLAINER_DIALOG_CF" ];
++    const message = dialogKeys.map((dialogKey: string) => {
++      return this._translateService.instant(`ADS.${dialogKey}.MESSAGE`);
++    }).join("\n");
+     this._dialog.open(AlertDialogComponent, {
+       minWidth: 250,
+       maxWidth: 400,
+       disableClose: true,
+       data: {
+-        title: this._translateService.instant(`ADS.${dialogKey}.TITLE`),
+-        message: this._translateService.instant(`ADS.${dialogKey}.MESSAGE`),
++        title: this._translateService.instant(`ADS.${dialogKeys[0]}.TITLE`),
++        message: message,
+       },
+     });
+   }
+ }
+--- wowup-electron/src/environments/environment.dev.ts
++++ wowup-electron/src/environments/environment.dev.ts
+@@ -18,19 +18,19 @@
+   wago: {
+     enabled: true,
+     termsUrl: "https://addons.wago.io/agreements/terms-of-service",
+     dataConsentUrl: "https://addons.wago.io/agreements/wowup-data-consent",
+   },
+   curseforge: {
+-    enabled: false,
++    enabled: true,
+     httpTimeoutMs: 60000,
+-    apiKey: "",
++    apiKey: "{{CURSEFORGE_API_KEY}}",
+   },
+   autoUpdateIntervalMs: 3600000, // 1 hour
+   appUpdateIntervalMs: 3600000, // 1 hour
+   defaultHttpTimeoutMs: 10000,
+   defaultHttpResetTimeoutMs: 30000,
+   wowUpHubHttpTimeoutMs: 10000,
+   wagoHttpTimeoutMs: 10000,
+   newsRefreshIntervalMs: 3600000, // 1 hour
+   featuredAddonsCacheTimeSec: 30, // 30 sec
+ };
+--- wowup-electron/src/environments/environment.prod.ts
++++ wowup-electron/src/environments/environment.prod.ts
+@@ -13,19 +13,19 @@
+   wago: {
+     enabled: true,
+     termsUrl: "https://addons.wago.io/agreements/terms-of-service",
+     dataConsentUrl: "https://addons.wago.io/agreements/wowup-data-consent",
+   },
+   curseforge: {
+-    enabled: false,
++    enabled: true,
+     httpTimeoutMs: 60000,
+-    apiKey: "",
++    apiKey: "{{CURSEFORGE_API_KEY}}",
+   },
+   autoUpdateIntervalMs: 3600000, // 1 hour
+   appUpdateIntervalMs: 3600000, // 1 hour
+   defaultHttpTimeoutMs: 10000,
+   defaultHttpResetTimeoutMs: 30000,
+   wowUpHubHttpTimeoutMs: 10000,
+   wagoHttpTimeoutMs: 10000,
+   newsRefreshIntervalMs: 3600000, // 1 hour
+   featuredAddonsCacheTimeSec: 30, // 30 sec
+ };
+--- wowup-electron/src/environments/environment.ts
++++ wowup-electron/src/environments/environment.ts
+@@ -8,24 +8,24 @@
+   warcraftTavernNewsFeedUrl:
+     "https://www.warcrafttavern.com/?call_custom_simple_rss=1&csrp_post_type=wow-classic-news,tbc-classic-news,retail-news&csrp_thumbnail_size=medium",
+   azure: {
+     applicationInsightsKey: "4a53e8d9-796c-4f80-b1a6-9a058374dd6d",
+   },
+   wago: {
+-    enabled: false,
++    enabled: true,
+     termsUrl: "https://addons.wago.io/agreements/terms-of-service",
+     dataConsentUrl: "https://addons.wago.io/agreements/wowup-data-consent",
+   },
+   curseforge: {
+-    enabled: false,
++    enabled: true,
+     httpTimeoutMs: 60000,
+     apiKey: "{{CURSEFORGE_API_KEY}}",
+   },
+   autoUpdateIntervalMs: 3600000, // 1 hour
+   appUpdateIntervalMs: 3600000, // 1 hour
+   defaultHttpTimeoutMs: 10000,
+   defaultHttpResetTimeoutMs: 30000,
+   wowUpHubHttpTimeoutMs: 10000,
+   wagoHttpTimeoutMs: 10000,
+   newsRefreshIntervalMs: 3600000, // 1 hour
+   featuredAddonsCacheTimeSec: 30, // 30 sec
+ };
+--- wowup-electron/gulpfile.js
++++ wowup-electron/gulpfile.js
+@@ -50,18 +50,38 @@
+ function npmRun(cmd) {
+   return function npmRunCmd(cb) {
+     npmRunTask(cb, cmd);
+   };
+ }
+ 
++async function updateCfKey() {
++  const cfApiKey = process.env.CURSEFORGE_API_KEY;
++  console.log(cfApiKey);
++  if (typeof cfApiKey !== "string" || cfApiKey.length === 0) {
++    throw new Error("CURSEFORGE_API_KEY missing");
++  }
++
++  const envPath = "src/environments";
++  const environments = await fs.readdir(envPath);
++
++  for (let env of environments) {
++    const filePath = path.join(envPath, env);
++    let envData = await fs.readFile(filePath, { encoding: "utf-8" });
++    envData = envData.replace("{{CURSEFORGE_API_KEY}}", cfApiKey);
++
++    await fs.writeFile(filePath, envData);
++    console.log(envData);
++  }
++}
++
+ const prePackageTasks = [
+   npmRun("lint"),
+   npmRun("build:prod"),
+   prePackageTask,
+   prePackageCopyTask,
+   packageChDir,
+   npmRun("install:prod"),
+ ];
+ 
+ exports.default = defaultTask;
+-exports.package = gulp.series(...prePackageTasks, npmRun("electron:publish"));
+-exports.packageLocal = gulp.series(...prePackageTasks, npmRun("electron:publish:never:local"));
++exports.package = gulp.series(...prePackageTasks, updateCfKey, npmRun("electron:publish"));
++exports.packageLocal = gulp.series(...prePackageTasks, updateCfKey, npmRun("electron:publish:never:local"));

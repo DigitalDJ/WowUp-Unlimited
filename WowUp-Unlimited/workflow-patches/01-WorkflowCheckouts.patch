@@ -1,0 +1,38 @@
+--- .github/workflows/electron-all-build.yml
++++ .github/workflows/electron-all-build.yml
+@@ -27,11 +27,32 @@
+         os: [ubuntu-latest, windows-latest,"macos-latest"]
+         node-version: [20.x]
+ 
+-    steps:
+-      - name: Checkout
+-        uses: actions/checkout@v2
++    steps:
++      - name: Initialize git config
++        run: |
++          git config --global user.name "GitHub Actions"
++          git config --global user.email noreply@github.com
++          git config --global core.autocrlf false
++          git config --global core.eol lf
++      - name: Checkout WowUp-Unlimited
++        uses: actions/checkout@v3
+         with:
+           fetch-depth: 0
++          ref: 'main'
++          path: 'WowUp-Unlimited'
++      - name: Checkout WowUp-Unlimited Orphan
++        uses: actions/checkout@v3
++        with:
++          fetch-depth: 0
++          ref: '${{ env.release_name }}-Src'
++          path: 'WowUp-Unlimited-Src'
++      - name: Checkout WowUp
++        uses: actions/checkout@v3
++        with:
++          repository: 'WowUp/WowUp'
++          ref: ${{ env.wowup_branch }}
++          path: 'WowUp'
++          fetch-depth: 0
+ 
+       - name: Use Node.js ${{ matrix.node-version }}
+         uses: actions/setup-node@v2
