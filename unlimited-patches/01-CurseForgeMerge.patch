@@ -73,6 +73,38 @@
            CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
            CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
          run: cd ./wowup-electron && npm ci && npm run electron:publish
+--- wowup-electron/src/app/app.component.ts
++++ wowup-electron/src/app/app.component.ts
+@@ -420,13 +420,13 @@
+       this.sessionService.autoUpdateComplete();
+     }
+   };
+ 
+   private async showManyAddonsAutoUpdated(updatedAddons: Addon[]) {
+     const iconPath = await this._fileService.getAssetFilePath(
+-      AppConfig.curseforge.enabled ? WOWUP_LOGO_FILENAME_CF : WOWUP_LOGO_FILENAME,
++      false ? WOWUP_LOGO_FILENAME_CF : WOWUP_LOGO_FILENAME,
+     );
+     const translated: { [key: string]: string } = await this._translateService
+       .get(["APP.AUTO_UPDATE_NOTIFICATION_TITLE", "APP.AUTO_UPDATE_NOTIFICATION_BODY"], {
+         count: updatedAddons.length,
+       })
+       .toPromise();
+@@ -441,13 +441,13 @@
+   }
+ 
+   private async showFewAddonsAutoUpdated(updatedAddons: Addon[]) {
+     const addonNames = _.map(updatedAddons, (addon) => addon.name);
+     const addonText = _.join(addonNames, "\r\n");
+     const iconPath = await this._fileService.getAssetFilePath(
+-      AppConfig.curseforge.enabled ? WOWUP_LOGO_FILENAME_CF : WOWUP_LOGO_FILENAME,
++      false ? WOWUP_LOGO_FILENAME_CF : WOWUP_LOGO_FILENAME,
+     );
+     const translated: { [key: string]: string } = await this._translateService
+       .get(["APP.AUTO_UPDATE_NOTIFICATION_TITLE", "APP.AUTO_UPDATE_FEW_NOTIFICATION_BODY"], {
+         addonNames: addonText,
+       })
+       .toPromise();
 --- wowup-electron/src/app/components/common/footer/footer.component.html
 +++ wowup-electron/src/app/components/common/footer/footer.component.html
 @@ -7,13 +7,13 @@
@@ -90,6 +122,23 @@
      </div>
      <div *ngSwitchCase="appUpdateState.UpdateAvailable">
        <p>{{ "APP.WOWUP_UPDATE.UPDATE_AVAILABLE" | translate }}</p>
+--- wowup-electron/src/app/components/common/titlebar/titlebar.component.ts
++++ wowup-electron/src/app/components/common/titlebar/titlebar.component.ts
+@@ -82,13 +82,13 @@
+ 
+   public getTitleKey():string {
+     if(this.isFullscreen){
+       return "APP.WINDOW_TITLE_FULLSCREEN"
+     }
+ 
+-    return AppConfig.curseforge.enabled ? "APP.WINDOW_TITLE_CF" : "APP.WINDOW_TITLE"
++    return false ? "APP.WINDOW_TITLE_CF" : "APP.WINDOW_TITLE"
+   }
+ 
+   public async onClickClose(): Promise<void> {
+     await this.electronService.closeWindow();
+   }
+ 
 --- wowup-electron/src/app/components/common/vertical-tabs/vertical-tabs.component.ts
 +++ wowup-electron/src/app/components/common/vertical-tabs/vertical-tabs.component.ts
 @@ -178,18 +178,21 @@
