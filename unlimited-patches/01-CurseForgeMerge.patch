@@ -75,6 +75,20 @@
          run: cd ./wowup-electron && npm ci && npm run electron:publish
 --- wowup-electron/src/app/app.component.ts
 +++ wowup-electron/src/app/app.component.ts
+@@ -36,13 +36,12 @@
+   IPC_MENU_ZOOM_OUT_CHANNEL,
+   IPC_MENU_ZOOM_RESET_CHANNEL,
+   IPC_POWER_MONITOR_RESUME,
+   IPC_POWER_MONITOR_UNLOCK,
+   IPC_REQUEST_INSTALL_FROM_URL,
+   WOWUP_LOGO_FILENAME,
+-  WOWUP_LOGO_FILENAME_CF,
+   ZOOM_FACTOR_KEY,
+ } from "../common/constants";
+ import { AppUpdateState, MenuConfig, SystemTrayConfig } from "../common/wowup/models";
+ import { AppConfig } from "../environments/environment";
+ import { InstallFromUrlDialogComponent } from "./components/addons/install-from-url-dialog/install-from-url-dialog.component";
+ import { AlertDialogComponent } from "./components/common/alert-dialog/alert-dialog.component";
 @@ -420,13 +420,13 @@
        this.sessionService.autoUpdateComplete();
      }
