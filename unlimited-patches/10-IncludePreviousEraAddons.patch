@@ -1,6 +1,6 @@
 --- wowup-electron/src/app/addon-providers/curse-addon-provider.ts
 +++ wowup-electron/src/app/addon-providers/curse-addon-provider.ts
-@@ -57,32 +57,32 @@
+@@ -57,37 +57,37 @@
  const GAME_TYPE_LISTS = [
    {
      flavor: "wow_classic",
@@ -39,6 +39,12 @@
      matches: [WowClientType.Classic, WowClientType.ClassicPtr, WowClientType.ClassicBeta],
    },
    {
+     flavor: "wow-wrath-titan",
+-    typeId: 81212,
++    typeId: [81212],
+     matches: [],
+   },
+ ];
 @@ -488,7 +488,7 @@
        throw new Error(`Game type not found: ${clientType}`);
      }
