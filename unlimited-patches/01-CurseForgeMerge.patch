@@ -83,7 +83,7 @@
    private async showManyAddonsAutoUpdated(updatedAddons: Addon[]) {
      const iconPath = await this._fileService.getAssetFilePath(
 -      AppConfig.curseforge.enabled ? WOWUP_LOGO_FILENAME_CF : WOWUP_LOGO_FILENAME,
-+      false ? WOWUP_LOGO_FILENAME_CF : WOWUP_LOGO_FILENAME,
++      WOWUP_LOGO_FILENAME,
      );
      const translated: { [key: string]: string } = await this._translateService
        .get(["APP.AUTO_UPDATE_NOTIFICATION_TITLE", "APP.AUTO_UPDATE_NOTIFICATION_BODY"], {
@@ -98,7 +98,7 @@
      const addonText = _.join(addonNames, "\r\n");
      const iconPath = await this._fileService.getAssetFilePath(
 -      AppConfig.curseforge.enabled ? WOWUP_LOGO_FILENAME_CF : WOWUP_LOGO_FILENAME,
-+      false ? WOWUP_LOGO_FILENAME_CF : WOWUP_LOGO_FILENAME,
++      WOWUP_LOGO_FILENAME,
      );
      const translated: { [key: string]: string } = await this._translateService
        .get(["APP.AUTO_UPDATE_NOTIFICATION_TITLE", "APP.AUTO_UPDATE_FEW_NOTIFICATION_BODY"], {
@@ -115,7 +115,7 @@
    <div class="flex-grow-1"></div>
    <p class="mr-3">{{ sessionService.pageContextText$ | async }}</p>
 -  <p>v{{ versionNumber | async }} {{ isCurseForge ? "CF" : "" }}</p>
-+  <p>v{{ versionNumber | async }} {{ false ? "CF" : "" }}</p>
++  <p>v{{ versionNumber | async }} {{ "" }}</p>
    <div class="h-100 ml-3" [ngSwitch]="appUpdateState$ | async">
      <div *ngSwitchCase="appUpdateState.CheckingForUpdate">
        <p>{{ "APP.WOWUP_UPDATE.CHECKING_FOR_UPDATE" | translate }}</p>
@@ -132,7 +132,7 @@
      }
  
 -    return AppConfig.curseforge.enabled ? "APP.WINDOW_TITLE_CF" : "APP.WINDOW_TITLE"
-+    return false ? "APP.WINDOW_TITLE_CF" : "APP.WINDOW_TITLE"
++    return "APP.WINDOW_TITLE"
    }
  
    public async onClickClose(): Promise<void> {
