@@ -1,0 +1,27 @@
+--- .github/workflows/electron-all-build.yml
++++ .github/workflows/electron-all-build.yml
+@@ -3,6 +3,9 @@
+   # - push
+   workflow_dispatch:
+ 
++defaults:
++  run:
++    shell: bash
+ jobs:
+   # create-release:
+   #   name: Create Release
+@@ -81,11 +84,11 @@
+           cd ./wowup-electron/electron-build
+           mkdir code_signer
+           cd ./code_signer
+-          Write-Host "Downloading CodeSignTool from ssl.com..."
++          echo "Downloading CodeSignTool from ssl.com..."
+           powershell -Command "Invoke-WebRequest -Uri 'https://www.ssl.com/download/codesigntool-for-windows' -OutFile 'out.zip' -Verbose"
+-          Write-Host "Expanding CodeSignTool archive..."
++          echo "Expanding CodeSignTool archive..."
+           powershell -Command "Expand-Archive -Path 'out.zip' -DestinationPath '.' -Force -Verbose"
+-          Write-Host "Done extracting CodeSignTool."
++          echo "Done extracting CodeSignTool."
+           cd ../../..
+ 
+       - name: Build Windows App

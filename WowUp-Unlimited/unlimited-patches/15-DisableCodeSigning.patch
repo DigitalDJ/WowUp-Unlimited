@@ -1,0 +1,66 @@
+﻿--- .github/workflows/electron-mac-build.yml
++++ .github/workflows/electron-mac-build.yml
+@@ -53,15 +53,11 @@
+           cd ./wowup-electron
+           npm i dmg-license
+ 
+       - name: Build Mac App
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+-          CSC_LINK: ${{ secrets.MACOS_CERT }}
+-          CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+-          NOTARIZE_APPLE_ID: ${{ secrets.NOTARIZE_APPLE_ID }}
+-          NOTARIZE_APPLE_PASSWORD: ${{ secrets.NOTARIZE_APPLE_PASSWORD }}
+-          NOTARIZE_APPLE_TEAM_ID: ${{ secrets.NOTARIZE_APPLE_TEAM_ID }}
++          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+         run: |
+           cd ./wowup-electron
+           npm i
+           npm run electron:publish
+--- .github/workflows/electron-windows-build.yml
++++ .github/workflows/electron-windows-build.yml
+@@ -49,9 +49,7 @@
+         run: npm install -g @angular/cli
+ 
+       - name: Build Windows App
+         if: matrix.os == 'windows-latest'
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+-          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+-          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+         run: cd ./wowup-electron && npm ci && npm run electron:publish
+--- wowup-electron/electron-build/electron-builder.json
++++ wowup-electron/electron-build/electron-builder.json
+@@ -9,17 +9,12 @@
+   "nodeGypRebuild": true,
+   "files": ["dist/**/*.*", "assets/**/*.*", "app/**/*.js", "src/common/**/*.js", "build/Release/*.node"],
+   "win": {
+     "icon": "electron-build/icon.ico",
+     "target": ["nsis", "portable"],
+     "forceCodeSigning": false,
+-    "signtoolOptions": {
+-      "sign": "./electron-build/sign-windows.js",
+-      "signingHashAlgorithms": ["sha256"],
+-      "publisherName": "WowUp LLC"
+-    }
+   },
+   "nsis": {
+     "deleteAppDataOnUninstall": true
+   },
+   "mac": {
+     "icon": "electron-build/icon.icns",
+@@ -24,13 +24,13 @@
+     "target": [
+       {
+         "target": "default",
+         "arch": ["x64", "arm64"]
+       }
+     ],
+-    "hardenedRuntime": true,
++    "hardenedRuntime": false,
+     "entitlements": "./electron-build/entitlements.mac.plist",
+     "extendInfo": {
+       "CFBundleURLTypes": [
+         {
+           "CFBundleTypeRole": "Shell",
+           "CFBundleURLName": "CurseForge",

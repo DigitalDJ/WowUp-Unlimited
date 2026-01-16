@@ -1,0 +1,28 @@
+--- .github/workflows/electron-all-build.yml
++++ .github/workflows/electron-all-build.yml
+@@ -118,11 +118,7 @@
+         if: matrix.os == 'macos-latest'
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+-          CSC_LINK: ${{ secrets.MACOS_CERT }}
+-          CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+-          NOTARIZE_APPLE_ID: ${{ secrets.NOTARIZE_APPLE_ID }}
+-          NOTARIZE_APPLE_PASSWORD: ${{ secrets.NOTARIZE_APPLE_PASSWORD }}
+-          NOTARIZE_APPLE_TEAM_ID: ${{ secrets.NOTARIZE_APPLE_TEAM_ID }}
++          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+         run: |
+           cd ./WowUp/wowup-electron
+           npm i
+@@ -132,12 +128,4 @@
+         if: matrix.os == 'windows-latest'
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+-          WINDOWS_SIGN_USER_NAME: ${{ secrets.WINDOWS_SIGN_USER_NAME }}
+-          WINDOWS_SIGN_USER_PASSWORD: ${{ secrets.WINDOWS_SIGN_USER_PASSWORD }}
+-          WINDOWS_SIGN_CREDENTIAL_ID_PROD: ${{ secrets.WINDOWS_SIGN_CREDENTIAL_ID_PROD }}
+-          WINDOWS_SIGN_CREDENTIAL_ID_NONPROD: ${{ secrets.WINDOWS_SIGN_CREDENTIAL_ID_NONPROD }}
+-          WINDOWS_SIGN_USER_TOTP_PROD: ${{ secrets.WINDOWS_SIGN_USER_TOTP_PROD }}
+-          WINDOWS_SIGN_USER_TOTP_NONPROD: ${{ secrets.WINDOWS_SIGN_USER_TOTP_NONPROD }}
+-          # CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+-          # CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+         run: cd ./WowUp/wowup-electron && npm i && npm run electron:publish

@@ -1,0 +1,124 @@
+name: Build WowUp Electron All CF
+on:
+  # - push
+  workflow_dispatch:
+
+jobs:
+  # create-release:
+  #   name: Create Release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Create Release
+  #       id: create_release
+  #       uses: actions/create-release@v1
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+  #       with:
+  #         tag_name: ${{ github.ref }}
+  #         release_name: Release ${{ github.ref }}
+  #         draft: true
+  #         prerelease: true
+
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, "macos-latest"]
+        node-version: [22.x]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Inject Token
+        env:
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: |
+          cd ./wowup-electron
+          node ./inject-token.js
+
+      - name: Install lib dependencies
+        run: |
+          cd ./wowup-lib
+          npm install
+
+      - name: Install Angular CLI
+        run: npm install -g @angular/cli
+
+      - name: dmg-license
+        if: matrix.os == 'macos-latest'
+        run: |
+          cd ./wowup-electron
+          npm i dmg-license
+
+      - name: Chceckout-CF
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/checkout@v4
+        with:
+          repository: 'WowUp/WowUp.CF'
+          token: ${{ secrets.WOWUP_CF_REPO_KEY }}
+          path: 'wowup-cf'
+
+      - name: Create CF Change
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd ./wowup-cf
+          date +%s > wowup-build-dt.txt
+          git config --global user.name 'zakrn'
+          git config --global user.email 'zakrn@wowup.io'
+          git commit -am "WowUp Main Build"
+          git push
+
+      - name: Build Linux App
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          GH_TOKEN: ${{ secrets.WOWUP_CF_REPO_KEY }} # This token is provided by Actions, you do not need to create your own token
+        run: |
+          cd ./wowup-electron
+          npm ci
+          npm run ow:electron:publish
+
+      - name: Build Mac App
+        if: matrix.os == 'macos-latest'
+        env:
+          GH_TOKEN: ${{ secrets.WOWUP_CF_REPO_KEY }} # This token is provided by Actions, you do not need to create your own token
+          CSC_LINK: ${{ secrets.MACOS_CERT }}
+          CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          NOTARIZE_APPLE_ID: ${{ secrets.NOTARIZE_APPLE_ID }}
+          NOTARIZE_APPLE_PASSWORD: ${{ secrets.NOTARIZE_APPLE_PASSWORD }}
+          NOTARIZE_APPLE_TEAM_ID: ${{ secrets.NOTARIZE_APPLE_TEAM_ID }}
+        run: |
+          cd ./wowup-electron
+          npm ci
+          npm run ow:electron:publish
+
+      - name: Get ssl.com esigner zip file and unzip
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd ./wowup-electron/electron-build
+          mkdir code_signer
+          cd ./code_signer
+          Write-Host "Downloading CodeSignTool from ssl.com..."
+          powershell -Command "Invoke-WebRequest -Uri 'https://www.ssl.com/download/codesigntool-for-windows' -OutFile 'out.zip' -Verbose"
+          Write-Host "Expanding CodeSignTool archive..."
+          powershell -Command "Expand-Archive -Path 'out.zip' -DestinationPath '.' -Force -Verbose"
+          Write-Host "Done extracting CodeSignTool."
+          cd ../../..
+
+      - name: Build Windows App
+        if: matrix.os == 'windows-latest'
+        env:
+          GH_TOKEN: ${{ secrets.WOWUP_CF_REPO_KEY }} # This token is provided by Actions, you do not need to create your own token
+          WINDOWS_SIGN_USER_NAME: ${{ secrets.WINDOWS_SIGN_USER_NAME }}
+          WINDOWS_SIGN_USER_PASSWORD: ${{ secrets.WINDOWS_SIGN_USER_PASSWORD }}
+          WINDOWS_SIGN_CREDENTIAL_ID: ${{ secrets.WINDOWS_SIGN_CREDENTIAL_ID }}
+          WINDOWS_SIGN_CREDENTIAL_ID_NONPROD: ${{ secrets.WINDOWS_SIGN_CREDENTIAL_ID_NONPROD }}
+          WINDOWS_SIGN_USER_TOTP: ${{ secrets.WINDOWS_SIGN_USER_TOTP }}
+          WINDOWS_SIGN_USER_TOTP_NONPROD: ${{ secrets.WINDOWS_SIGN_USER_TOTP_NONPROD }}
+        run: cd ./wowup-electron && npm ci && npm run ow:electron:publish

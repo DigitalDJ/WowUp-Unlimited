@@ -1,0 +1,52 @@
+--- .github/workflows/electron-all-build.yml
++++ .github/workflows/electron-all-build.yml
+@@ -40,7 +40,7 @@
+ 
+       - name: Install lib dependencies
+         run: |
+-          cd ./wowup-lib
++          cd ./WowUp/wowup-lib
+           npm install
+ 
+       - name: Install Angular CLI
+@@ -49,7 +49,7 @@
+       - name: dmg-license
+         if: matrix.os == 'macos-latest'
+         run: |
+-          cd ./wowup-electron
++          cd ./WowUp/wowup-electron
+           npm i dmg-license
+ 
+       - name: Build Linux App
+@@ -57,7 +57,7 @@
+         env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+         run: |
+-          cd ./wowup-electron
++          cd ./WowUp/wowup-electron
+           npm i
+           npm run electron:publish
+ 
+@@ -71,14 +71,14 @@
+           NOTARIZE_APPLE_PASSWORD: ${{ secrets.NOTARIZE_APPLE_PASSWORD }}
+           NOTARIZE_APPLE_TEAM_ID: ${{ secrets.NOTARIZE_APPLE_TEAM_ID }}
+         run: |
+-          cd ./wowup-electron
++          cd ./WowUp/wowup-electron
+           npm i
+           npm run electron:publish
+ 
+       - name: Get ssl.com esigner zip file and unzip
+         if: matrix.os == 'windows-latest'
+         run: |
+-          cd ./wowup-electron/electron-build
++          cd ./WowUp/wowup-electron/electron-build
+           mkdir code_signer
+           cd ./code_signer
+           Write-Host "Downloading CodeSignTool from ssl.com..."
+@@ -100,4 +100,4 @@
+           WINDOWS_SIGN_USER_TOTP_NONPROD: ${{ secrets.WINDOWS_SIGN_USER_TOTP_NONPROD }}
+           # CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+           # CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+-        run: cd ./wowup-electron && npm i && npm run electron:publish
++        run: cd ./WowUp/wowup-electron && npm i && npm run electron:publish
