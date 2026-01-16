@@ -1,5 +1,14 @@
 --- .github/workflows/electron-all-build.yml
 +++ .github/workflows/electron-all-build.yml
+@@ -40,7 +40,7 @@
+ 
+       - name: Install lib dependencies
+         run: |
+-          cd ./wowup-lib
++          cd ./WowUp/wowup-lib
+           npm install
+ 
+       - name: Install Angular CLI
 @@ -79,7 +79,7 @@
        - name: dmg-license
          if: matrix.os == 'macos-latest'
