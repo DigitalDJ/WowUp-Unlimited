@@ -1,6 +1,6 @@
 --- wowup-electron/src/app/addon-providers/curse-addon-provider.ts
 +++ wowup-electron/src/app/addon-providers/curse-addon-provider.ts
-@@ -57,22 +57,22 @@
+@@ -57,32 +57,32 @@
  const GAME_TYPE_LISTS = [
    {
      flavor: "wow_classic",
@@ -21,12 +21,24 @@
      matches: [WowClientType.Retail, WowClientType.RetailPtr, WowClientType.Beta, WowClientType.RetailXPtr],
    },
    {
+     flavor: "wow-burning-crusade-classic",
+-    typeId: 73246,
++    typeId: [67408, 73246],
+     matches: [WowClientType.Anniversary],
+   },
+   {
      flavor: "wow-cataclysm-classic",
 -    typeId: 77522,
-+    typeId: [77522, 73713, 73246],
++    typeId: [77522, 73713, 73246, 67408],
+     matches: [],
+   },
+   {
+     flavor: "wow-mists-of-pandaria-classic",
+-    typeId: 79434,
++    typeId: [79434, 77522, 73713, 73246, 67408],
      matches: [WowClientType.Classic, WowClientType.ClassicPtr, WowClientType.ClassicBeta],
    },
- ];
+   {
 @@ -488,7 +488,7 @@
        throw new Error(`Game type not found: ${clientType}`);
      }

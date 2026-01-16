@@ -1,15 +1,24 @@
 --- wowup-electron/inject-token.js
 +++ wowup-electron/inject-token.js
-@@ -1,7 +1,8 @@
- const fs = require("fs");
+@@ -2,7 +2,8 @@
  const path = require("path");
  
+ console.log("CURSEFORGE_API_KEY from process.env:", process.env.CURSEFORGE_API_KEY);
 -const apiToken = process.env.CURSEFORGE_API_KEY || "UNKNOWN";
 +const apiTokenPath = "./curseforge-api-key";
 +const apiToken = process.env.CURSEFORGE_API_KEY || fs.readFileSync(apiTokenPath, { encoding: "utf-8" }) || "UNKNOWN";
+ console.log("Using API token:", apiToken === "UNKNOWN" ? "UNKNOWN" : "[REDACTED]");
  
  const environmentsPath = "./src/environments";
- const envFiles = fs.readdirSync(environmentsPath);
+@@ -10,7 +11,7 @@
+ 
+ for (const envFile of envFiles) {
+   // Only process files that end with ow.ts (OW builds)
+-  if (!envFile.endsWith('ow.ts')) {
++  if (!envFile.endsWith('.ts')) {
+     console.log(`Skipping ${envFile} (not an OW environment file)`);
+     continue;
+   }
 --- wowup-electron/gulpfile.js
 +++ wowup-electron/gulpfile.js
 @@ -54,7 +54,8 @@

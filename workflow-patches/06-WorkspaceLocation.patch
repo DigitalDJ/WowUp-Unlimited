@@ -28,8 +28,8 @@
            npm run electron:publish
  
 @@ -111,4 +111,4 @@
-           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-           CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
-           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+           WINDOWS_SIGN_USER_TOTP_NONPROD: ${{ secrets.WINDOWS_SIGN_USER_TOTP_NONPROD }}
+           # CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+           # CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
 -        run: cd ./wowup-electron && npm i && npm run electron:publish
 +        run: cd ./WowUp/wowup-electron && npm i && npm run electron:publish

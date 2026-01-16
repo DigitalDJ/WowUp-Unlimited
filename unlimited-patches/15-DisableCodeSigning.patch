@@ -31,21 +31,24 @@
          run: cd ./wowup-electron && npm ci && npm run electron:publish
 --- wowup-electron/electron-build/electron-builder.json
 +++ wowup-electron/electron-build/electron-builder.json
-@@ -9,13 +9,13 @@
-   "publish": ["github"],
+@@ -9,17 +9,12 @@
    "nodeGypRebuild": true,
    "files": ["dist/**/*.*", "assets/**/*.*", "app/**/*.js", "src/common/**/*.js", "build/Release/*.node"],
    "win": {
      "icon": "electron-build/icon.ico",
      "target": ["nsis", "portable"],
--    "forceCodeSigning": true,
-+    "forceCodeSigning": false,
-     "publisherName": "WowUp LLC"
+     "forceCodeSigning": false,
+-    "signtoolOptions": {
+-      "sign": "./electron-build/sign-windows.js",
+-      "signingHashAlgorithms": ["sha256"],
+-      "publisherName": "WowUp LLC"
+-    }
    },
    "nsis": {
      "deleteAppDataOnUninstall": true
    },
    "mac": {
+     "icon": "electron-build/icon.icns",
 @@ -24,13 +24,13 @@
      "target": [
        {
