@@ -23,15 +23,17 @@
  
  interface ProtocolData {
    addonId: number;
-@@ -95,7 +98,7 @@
+@@ -95,8 +98,8 @@
  
  export class CurseAddonProvider extends AddonProvider {
    private readonly _circuitBreaker: CircuitBreakerWrapper;
 -  private readonly _cf2Client: cfv2.CFV2Client;
+-  private readonly _cf2ApiKey = AppConfig.curseforge.apiKey;
 +  private _cf2Client: cfv2.CFV2Client;
-   private readonly _cf2ApiKey = AppConfig.curseforge.apiKey;
++  private _cf2ApiKey = AppConfig.curseforge.apiKey;
  
    public readonly name = ADDON_PROVIDER_CURSEFORGE;
+   public readonly forceIgnore = false;
 @@ -112,6 +115,7 @@
      private _cachingService: CachingService,
      private _networkService: NetworkService,
