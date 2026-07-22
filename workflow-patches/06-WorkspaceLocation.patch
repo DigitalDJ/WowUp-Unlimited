@@ -37,13 +37,13 @@
            npm run electron:publish
  
        - name: Get ssl.com esigner zip file and unzip
-         if: matrix.os == 'windows-latest'
+         if: matrix.os == 'windows-2022'
          run: |
 -          cd ./wowup-electron/electron-build
 +          cd ./WowUp/wowup-electron/electron-build
            mkdir code_signer
            cd ./code_signer
-           Write-Host "Downloading CodeSignTool from ssl.com..."
+           Write-Host "Downloading CodeSignTool from GitHub releases..."
 @@ -100,4 +100,4 @@
            WINDOWS_SIGN_USER_TOTP_NONPROD: ${{ secrets.WINDOWS_SIGN_USER_TOTP_NONPROD }}
            # CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}

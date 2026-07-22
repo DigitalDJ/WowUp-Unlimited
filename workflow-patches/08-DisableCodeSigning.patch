@@ -14,7 +14,7 @@
            cd ./WowUp/wowup-electron
            npm i
 @@ -132,12 +128,4 @@
-         if: matrix.os == 'windows-latest'
+         if: matrix.os == 'windows-2022'
          env:
            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
 -          WINDOWS_SIGN_USER_NAME: ${{ secrets.WINDOWS_SIGN_USER_NAME }}
