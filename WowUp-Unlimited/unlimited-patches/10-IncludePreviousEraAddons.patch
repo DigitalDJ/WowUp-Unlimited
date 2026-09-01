@@ -1,0 +1,65 @@
+--- wowup-electron/src/app/addon-providers/curse-addon-provider.ts
++++ wowup-electron/src/app/addon-providers/curse-addon-provider.ts
+@@ -57,37 +57,37 @@
+ const GAME_TYPE_LISTS = [
+   {
+     flavor: "wow_classic",
+-    typeId: 67408,
++    typeId: [67408],
+     matches: [WowClientType.ClassicEra, WowClientType.ClassicEraPtr],
+   },
+   {
+     flavor: "wow-wrath-classic",
+-    typeId: 73713,
++    typeId: [73713, 73246],
+     matches: [],
+   },
+   {
+     flavor: "wow_retail",
+-    typeId: 517,
++    typeId: [517],
+     matches: [WowClientType.Retail, WowClientType.RetailPtr, WowClientType.Beta, WowClientType.RetailXPtr],
+   },
+   {
+     flavor: "wow-burning-crusade-classic",
+-    typeId: 73246,
++    typeId: [67408, 73246],
+     matches: [WowClientType.Anniversary],
+   },
+   {
+     flavor: "wow-cataclysm-classic",
+-    typeId: 77522,
++    typeId: [77522, 73713, 73246, 67408],
+     matches: [],
+   },
+   {
+     flavor: "wow-mists-of-pandaria-classic",
+-    typeId: 79434,
++    typeId: [79434, 77522, 73713, 73246, 67408],
+     matches: [WowClientType.Classic, WowClientType.ClassicPtr, WowClientType.ClassicBeta],
+   },
+   {
+     flavor: "wow-wrath-titan",
+-    typeId: 81212,
++    typeId: [81212],
+     matches: [],
+   },
+ ];
+@@ -488,7 +488,7 @@
+       throw new Error(`Game type not found: ${clientType}`);
+     }
+ 
+-    return gameType.typeId;
++    return gameType.typeId[0];
+   }
+ 
+   private hasSortableGameVersion(file: cfv2.CF2File, typeId: number): boolean {
+@@ -802,7 +802,7 @@
+   private getValidClientTypes(file: cfv2.CF2File): WowClientType[] {
+     const gameVersions: WowClientType[] = _.flatten(
+       GAME_TYPE_LISTS.filter((type) =>
+-        file.sortableGameVersions.find((sgv) => sgv.gameVersionTypeId === type.typeId),
++        file.sortableGameVersions.find((sgv) => type.typeId.includes(sgv.gameVersionTypeId))
+       ).map((game) => game.matches),
+     );
+ 
