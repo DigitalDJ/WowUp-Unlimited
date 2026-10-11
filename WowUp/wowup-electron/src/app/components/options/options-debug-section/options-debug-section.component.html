@@ -1,0 +1,97 @@
+<div class="container">
+  <h2>
+    {{ "PAGES.OPTIONS.DEBUG.TITLE" | translate }}
+  </h2>
+  <div class="actions">
+    <!-- SHOW LOG FILES -->
+    <div>
+      <div>{{ "PAGES.OPTIONS.DEBUG.LOG_FILES_LABEL" | translate }}</div>
+      <small class="text-2">{{ "PAGES.OPTIONS.DEBUG.LOG_FILES_DESCRIPTION" | translate }}</small>
+    </div>
+    <div>
+      <button id="show-log-btn" class="wu-btn wu-btn-primary w-100" (click)="onShowLogs()">
+        {{ "PAGES.OPTIONS.DEBUG.LOG_FILES_BUTTON" | translate }}
+      </button>
+    </div>
+    <!-- SHOW CONFIG FILES -->
+    <div>
+      <div>{{ "PAGES.OPTIONS.DEBUG.CONFIG_FILES_LABEL" | translate }}</div>
+      <small class="text-2">{{ "PAGES.OPTIONS.DEBUG.CONFIG_FILES_DESCRIPTION" | translate }}</small>
+    </div>
+    <div>
+      <button id="show-config-btn" class="wu-btn wu-btn-primary w-100" (click)="onShowConfig()">
+        {{ "PAGES.OPTIONS.DEBUG.CONFIG_FILES_BUTTON" | translate }}
+      </button>
+    </div>
+    <!-- DUMP DEBUG DATA -->
+    <div>
+      <div>{{ "PAGES.OPTIONS.DEBUG.DEBUG_DATA_LABEL" | translate }}</div>
+      <small class="text-2">{{ "PAGES.OPTIONS.DEBUG.DEBUG_DATA_DESCRIPTION" | translate }}</small>
+    </div>
+    <div>
+      <button
+        id="dump-debug-btn"
+        class="wu-btn wu-btn-primary w-100"
+        (click)="onLogDebugData()"
+        [disabled]="dumpingDebugData === true"
+      >
+        <span *ngIf="dumpingDebugData === false">{{ "PAGES.OPTIONS.DEBUG.DEBUG_DATA_BUTTON" | translate }}</span>
+        <div
+          *ngIf="dumpingDebugData === true"
+          [style.height]="'37px'"
+          [style.width]="'100px'"
+          class="row align-items-center justify-content-center"
+        >
+          <mat-spinner [diameter]="30" color="warn" mode="indeterminate"> </mat-spinner>
+        </div>
+      </button>
+    </div>
+    <!-- DEV TOOLS -->
+    <div>
+      <div>{{ "Debug ad frame" | translate }}</div>
+      <small class="text-2">{{ "Show the dev tools for the ad frame" | translate }}</small>
+    </div>
+    <div>
+      <button class="wu-btn wu-btn-primary w-100" (click)="onDebugAdFrame()">
+        {{ "Open Dev Tools" | translate }}
+      </button>
+    </div>
+    <!-- PROCESS METRICS -->
+    <div>
+      <div>{{ "Process metrics" | translate }}</div>
+      <small class="text-2">{{ "Record what each process is using right now to the log file" | translate }}</small>
+    </div>
+    <div>
+      <button
+        id="log-metrics-btn"
+        class="wu-btn wu-btn-primary w-100"
+        (click)="onLogProcessMetrics()"
+        [disabled]="loggingMetrics === true"
+      >
+        {{ "Log Process Metrics" | translate }}
+      </button>
+    </div>
+  </div>
+
+  <div class="metrics" *ngIf="metrics as snapshot">
+    <p class="text-2">
+      {{ snapshot.flavor }} &middot; window {{ metricsWindowState }} &middot; {{ snapshot.totalCpuPercent }}% cpu
+      &middot; {{ snapshot.totalMemoryMb }}MB
+      <span *ngIf="snapshot.cpuMeasured === false"> &middot; cpu not measured yet, sample again in a minute</span>
+    </p>
+    <table>
+      <tr>
+        <th>{{ "Process" | translate }}</th>
+        <th>{{ "PID" | translate }}</th>
+        <th>{{ "CPU" | translate }}</th>
+        <th>{{ "Memory" | translate }}</th>
+      </tr>
+      <tr *ngFor="let process of metricsProcesses">
+        <td>{{ describeProcessName(process) }}</td>
+        <td>{{ process.pid }}</td>
+        <td>{{ process.cpuPercent }}%</td>
+        <td>{{ process.memoryMb }}MB</td>
+      </tr>
+    </table>
+  </div>
+</div>
