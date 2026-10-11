@@ -183,10 +183,10 @@
 --- wowup-electron/src/environments/environment.dev.ts
 +++ wowup-electron/src/environments/environment.dev.ts
 @@ -18,19 +18,19 @@
+   },
    wago: {
      enabled: true,
      termsUrl: "https://addons.wago.io/agreements/terms-of-service",
-     dataConsentUrl: "https://addons.wago.io/agreements/wowup-data-consent",
    },
    curseforge: {
 -    enabled: false,
@@ -207,10 +207,10 @@
 --- wowup-electron/src/environments/environment.prod.ts
 +++ wowup-electron/src/environments/environment.prod.ts
 @@ -13,19 +13,19 @@
+   },
    wago: {
      enabled: true,
      termsUrl: "https://addons.wago.io/agreements/terms-of-service",
-     dataConsentUrl: "https://addons.wago.io/agreements/wowup-data-consent",
    },
    curseforge: {
 -    enabled: false,
@@ -230,7 +230,7 @@
  };
 --- wowup-electron/src/environments/environment.ts
 +++ wowup-electron/src/environments/environment.ts
-@@ -8,24 +8,24 @@
+@@ -8,23 +8,23 @@
    warcraftTavernNewsFeedUrl:
      "https://www.warcrafttavern.com/?call_custom_simple_rss=1&csrp_post_type=wow-classic-news,tbc-classic-news,retail-news&csrp_thumbnail_size=medium",
    azure: {
@@ -240,7 +240,6 @@
 -    enabled: false,
 +    enabled: true,
      termsUrl: "https://addons.wago.io/agreements/terms-of-service",
-     dataConsentUrl: "https://addons.wago.io/agreements/wowup-data-consent",
    },
    curseforge: {
 -    enabled: false,

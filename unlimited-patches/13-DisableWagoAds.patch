@@ -63,7 +63,7 @@
 +    const url = new URL(`${WAGO_AD_URL}`);
 +    const response = await this._cachingService.transaction(
 +      `${url.toString()}`,
-+      () => this._circuitBreaker.getText(url, undefined, { "User-Agent": WAGO_AD_USER_AGENT }),
++      () => this._circuitBreaker.getText(url, undefined, {}),
 +      WAGO_FEATURED_ADDONS_CACHE_TIME_SEC
 +    );
 +

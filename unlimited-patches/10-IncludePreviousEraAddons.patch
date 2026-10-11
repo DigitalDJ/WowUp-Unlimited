@@ -1,6 +1,6 @@
 --- wowup-electron/src/app/addon-providers/curse-addon-provider.ts
 +++ wowup-electron/src/app/addon-providers/curse-addon-provider.ts
-@@ -57,37 +57,37 @@
+@@ -58,42 +58,42 @@
  const GAME_TYPE_LISTS = [
    {
      flavor: "wow_classic",
@@ -36,7 +36,7 @@
      flavor: "wow-mists-of-pandaria-classic",
 -    typeId: 79434,
 +    typeId: [79434, 77522, 73713, 73246, 67408],
-     matches: [WowClientType.Classic, WowClientType.ClassicPtr, WowClientType.ClassicBeta],
+     matches: [WowClientType.Classic, WowClientType.ClassicPtr],
    },
    {
      flavor: "wow-wrath-titan",
@@ -44,8 +44,14 @@
 +    typeId: [81212],
      matches: [],
    },
+   {
+     flavor: "wow-forever",
+-    typeId: 88568,
++    typeId: [88568],
+     matches: [WowClientType.ClassicBeta],
+   },
  ];
-@@ -488,7 +488,7 @@
+@@ -518,7 +518,7 @@
        throw new Error(`Game type not found: ${clientType}`);
      }
  
@@ -54,7 +60,7 @@
    }
  
    private hasSortableGameVersion(file: cfv2.CF2File, typeId: number): boolean {
-@@ -802,7 +802,7 @@
+@@ -836,7 +836,7 @@
    private getValidClientTypes(file: cfv2.CF2File): WowClientType[] {
      const gameVersions: WowClientType[] = _.flatten(
        GAME_TYPE_LISTS.filter((type) =>
