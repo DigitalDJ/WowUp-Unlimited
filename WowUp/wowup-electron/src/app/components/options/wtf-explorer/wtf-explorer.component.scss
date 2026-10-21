@@ -1,0 +1,9 @@
+.container {
+  padding: 1em;
+
+  .divider {
+    margin-top: 20px;
+    height: 1px;
+    border-top: thin solid var(--divider-color);
+  }
+}

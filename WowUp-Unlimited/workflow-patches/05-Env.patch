@@ -1,0 +1,12 @@
+--- .github/workflows/electron-all-build.yml
++++ .github/workflows/electron-all-build.yml
+@@ -26,6 +26,9 @@
+   build:
+     name: Build
+     runs-on: ${{ matrix.os }}
++    env:
++      wowup_branch: 'WOWUP_BRANCH'
++      release_name: 'RELEASE_NAME'
+     strategy:
+       matrix:
+         os: [ubuntu-latest, windows-latest,"macos-latest"]
