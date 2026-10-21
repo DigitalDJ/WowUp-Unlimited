@@ -23,7 +23,7 @@
    {
      flavor: "wow-burning-crusade-classic",
 -    typeId: 73246,
-+    typeId: [67408, 73246],
++    typeId: [73246, 67408],
      matches: [WowClientType.Anniversary],
    },
    {
@@ -48,7 +48,7 @@
      flavor: "wow-forever",
 -    typeId: 88568,
 +    typeId: [88568],
-     matches: [WowClientType.ClassicBeta],
+     matches: [WowClientType.Forever, WowClientType.ClassicBeta],
    },
  ];
 @@ -518,7 +518,7 @@
