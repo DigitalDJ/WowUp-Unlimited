@@ -15,16 +15,64 @@
      "email": "zakrn@wowup.io"
    },
    "main": "app/main.js",
---- wowup-electron/app-env/inject-env.js
-+++ wowup-electron/app-env/inject-env.js
-@@ -20,9 +20,9 @@
- let packageData = fs.readFileSync(packagePath, "utf8");
- let packageJson = JSON.parse(packageData);
+--- wowup-electron/src/environments/environment.dev.ts
++++ wowup-electron/src/environments/environment.dev.ts
+@@ -9,7 +9,7 @@
+   wowUpWebsiteUrl: "https://dev.wowup.io",
+   wowUpApiUrl: "https://api.dev.wowup.io",
+   wowUpHubUrl: "https://hub.dev.wowup.io",
+-  wowupRepositoryUrl: "https://github.com/WowUp/WowUp",
++  wowupRepositoryUrl: "https://github.com/DigitalDJ/WowUp-Unlimited",
+   warcraftTavernNewsFeedUrl:
+     "https://www.warcrafttavern.com/?call_custom_simple_rss=1&csrp_post_type=wow-classic-news,tbc-classic-news,retail-news&csrp_thumbnail_size=large",
+   azure: {
+--- wowup-electron/src/environments/environment.prod.ts
++++ wowup-electron/src/environments/environment.prod.ts
+@@ -4,7 +4,7 @@
+   wowUpWebsiteUrl: "https://wowup.io",
+   wowUpApiUrl: "https://api.wowup.io",
+   wowUpHubUrl: "https://hub.wowup.io",
+-  wowupRepositoryUrl: "https://github.com/WowUp/WowUp",
++  wowupRepositoryUrl: "https://github.com/DigitalDJ/WowUp-Unlimited",
+   warcraftTavernNewsFeedUrl:
+     "https://www.warcrafttavern.com/?call_custom_simple_rss=1&csrp_post_type=wow-classic-news,tbc-classic-news,retail-news&csrp_thumbnail_size=medium",
+   azure: {
+--- wowup-electron/src/environments/environment.ts
++++ wowup-electron/src/environments/environment.ts
+@@ -4,7 +4,7 @@
+   wowUpWebsiteUrl: "https://dev.wowup.io",
+   wowUpApiUrl: "https://api.dev.wowup.io",
+   wowUpHubUrl: "https://hub.dev.wowup.io",
+-  wowupRepositoryUrl: "https://github.com/WowUp/WowUp",
++  wowupRepositoryUrl: "https://github.com/DigitalDJ/WowUp-Unlimited",
+   warcraftTavernNewsFeedUrl:
+     "https://www.warcrafttavern.com/?call_custom_simple_rss=1&csrp_post_type=wow-classic-news,tbc-classic-news,retail-news&csrp_thumbnail_size=medium",
+   azure: {
+--- wowup-shell/package.json
++++ wowup-shell/package.json
+@@ -7,7 +7,7 @@
+   "homepage": "https://wowup.io",
+   "repository": {
+     "type": "git",
+-    "url": "https://github.com/WowUp/WowUp.CF.git"
++    "url": "https://github.com/DigitalDJ/WowUp-Unlimited.git"
+   },
+   "author": {
+     "name": "WowUp LLC",
+--- wowup-shell/scripts/set-flavor.js
++++ wowup-shell/scripts/set-flavor.js
+@@ -5,13 +5,13 @@
+ //
+ //   node scripts/set-flavor.js <wago|ow>
+ const fs = require("node:fs");
+ const path = require("path");
  
- packageJson.name = process.env.BUILD_FLAVOR === "ow" ? "wowup-cf" : "wowup";
- packageJson.productName = process.env.BUILD_FLAVOR === "ow" ? "WowUpCf" : "WowUp";
- packageJson.repository.url =
--  process.env.BUILD_FLAVOR === "ow" ? "https://github.com/WowUp/WowUp.CF.git" : "https://github.com/WowUp/WowUp.git";
-+  process.env.BUILD_FLAVOR === "ow" ? "https://github.com/WowUp/WowUp.CF.git" : "https://github.com/DigitalDJ/WowUp-Unlimited.git";
+ const FLAVORS = {
+-  wago: { name: "wowup", productName: "WowUp", repository: "https://github.com/WowUp/WowUp.git" },
++  wago: { name: "wowup", productName: "WowUp", repository: "https://github.com/DigitalDJ/WowUp-Unlimited.git" },
+   ow: { name: "wowup-cf", productName: "WowUpCf", repository: "https://github.com/WowUp/WowUp.CF.git" },
+ };
  
- fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2));
+ const root = path.join(__dirname, "..");
+ 
+ function setFlavor(flavor) {

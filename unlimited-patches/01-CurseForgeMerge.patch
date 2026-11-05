@@ -1,78 +1,12 @@
-﻿--- .github/workflows/electron-linux-build.yml
-+++ .github/workflows/electron-linux-build.yml
-@@ -39,17 +39,24 @@
-           node-version: ${{ matrix.node-version }}
+﻿--- wowup-electron/app/env/environment.ts
++++ wowup-electron/app/env/environment.ts
+@@ -1,5 +1,5 @@
+ export const AppEnv = {
+-  buildFlavor: "ow",
++  buildFlavor: "wago",
+ };
  
-       - name: Setup Flatpak
-         if: matrix.os == 'ubuntu-latest'
-         run: sudo apt install flatpak flatpak-builder
  
-+      - name: Inject Token
-+        env:
-+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
-+        run: |
-+          cd ./wowup-electron
-+          node ./inject-token.js
-+
-       - name: Install Angular CLI
-         run: npm install -g @angular/cli
- 
-       - name: Build Linux App
-         if: matrix.os == 'ubuntu-latest'
-         env:
-           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-         run: |
-           cd ./wowup-electron
-           npm i
-           npm run electron:publish
---- .github/workflows/electron-mac-build.yml
-+++ .github/workflows/electron-mac-build.yml
-@@ -35,12 +35,19 @@
- 
-       - name: Use Node.js ${{ matrix.node-version }}
-         uses: actions/setup-node@v2
-         with:
-           node-version: ${{ matrix.node-version }}
- 
-+      - name: Inject Token
-+        env:
-+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
-+        run: |
-+          cd ./wowup-electron
-+          node ./inject-token.js
-+
-       - name: Install Angular CLI
-         run: npm install -g @angular/cli
- 
-       - name: dmg-license
-         run: |
-           cd ./wowup-electron
---- .github/workflows/electron-windows-build.yml
-+++ .github/workflows/electron-windows-build.yml
-@@ -35,16 +35,23 @@
- 
-       - name: Use Node.js ${{ matrix.node-version }}
-         uses: actions/setup-node@v2
-         with:
-           node-version: ${{ matrix.node-version }}
- 
-+      - name: Inject Token
-+        env:
-+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
-+        run: |
-+          cd ./wowup-electron
-+          node ./inject-token.js
-+          
-       - name: Install Angular CLI
-         run: npm install -g @angular/cli
- 
-       - name: Build Windows App
-         if: matrix.os == 'windows-2022'
-         env:
-           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-           CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
-           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
-         run: cd ./wowup-electron && npm ci && npm run electron:publish
 --- wowup-electron/src/app/app.component.ts
 +++ wowup-electron/src/app/app.component.ts
 @@ -36,13 +36,12 @@
@@ -85,7 +19,7 @@
 -  WOWUP_LOGO_FILENAME_CF,
    ZOOM_FACTOR_KEY,
  } from "../common/constants";
- import { AppUpdateState, MenuConfig, SystemTrayConfig } from "../common/wowup/models";
+ import { AppUpdateState, BundleUpdateEvent, MenuConfig, SystemTrayConfig } from "../common/wowup/models";
  import { AppConfig } from "../environments/environment";
  import { InstallFromUrlDialogComponent } from "./components/addons/install-from-url-dialog/install-from-url-dialog.component";
  import { AlertDialogComponent } from "./components/common/alert-dialog/alert-dialog.component";
@@ -119,6 +53,15 @@
          addonNames: addonText,
        })
        .toPromise();
+@@ -543,7 +565,7 @@
+     }
+ 
+     const iconPath = await this._fileService.getAssetFilePath(
+-      AppConfig.curseforge.enabled ? WOWUP_LOGO_FILENAME_CF : WOWUP_LOGO_FILENAME,
++      WOWUP_LOGO_FILENAME,
+     );
+     const translated: { [key: string]: string } = await this._translateService
+       .get(["APP.UPDATES_ON_HOLD_NOTIFICATION_TITLE", "APP.UPDATES_ON_HOLD_NOTIFICATION_BODY"])
 --- wowup-electron/src/app/components/common/footer/footer.component.html
 +++ wowup-electron/src/app/components/common/footer/footer.component.html
 @@ -7,13 +7,13 @@
@@ -130,12 +73,12 @@
    <p class="mr-3">{{ sessionService.pageContextText$ | async }}</p>
 -  <p>v{{ versionNumber | async }} {{ isCurseForge ? "CF" : "" }}</p>
 +  <p>v{{ versionNumber | async }} {{ "" }}</p>
-   <div class="h-100 ml-3" [ngSwitch]="appUpdateState$ | async">
-     <div *ngSwitchCase="appUpdateState.CheckingForUpdate">
-       <p>{{ "APP.WOWUP_UPDATE.CHECKING_FOR_UPDATE" | translate }}</p>
-     </div>
-     <div *ngSwitchCase="appUpdateState.UpdateAvailable">
-       <p>{{ "APP.WOWUP_UPDATE.UPDATE_AVAILABLE" | translate }}</p>
+   <button
+     *ngIf="bundleUpdate$ | async"
+     class="footer-button update-button text-1 ml-3"
+     matTooltip="{{ 'APP.WOWUP_UPDATE.RESTART_TO_UPDATE_TOOLTIP' | translate }}"
+     (click)="onClickRestartForBundleUpdate()"
+   >
 --- wowup-electron/src/app/components/common/titlebar/titlebar.component.ts
 +++ wowup-electron/src/app/components/common/titlebar/titlebar.component.ts
 @@ -82,13 +82,13 @@

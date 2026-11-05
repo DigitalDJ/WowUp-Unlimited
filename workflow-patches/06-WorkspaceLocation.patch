@@ -1,6 +1,6 @@
 --- .github/workflows/electron-all-build.yml
 +++ .github/workflows/electron-all-build.yml
-@@ -40,7 +40,7 @@
+@@ -76,7 +76,7 @@
  
        - name: Install lib dependencies
          run: |
@@ -9,44 +9,45 @@
            npm install
  
        - name: Install Angular CLI
-@@ -49,7 +49,7 @@
+@@ -85,7 +85,7 @@
        - name: dmg-license
          if: matrix.os == 'macos-latest'
          run: |
--          cd ./wowup-electron
-+          cd ./WowUp/wowup-electron
+-          cd ./wowup-shell
++          cd ./WowUp/wowup-shell
            npm i dmg-license
  
        - name: Build Linux App
-@@ -57,7 +57,7 @@
-         env:
-           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+@@ -95,7 +95,7 @@
+           BUNDLE_SIGNING_KEY: ${{ secrets.BUNDLE_SIGNING_KEY }} # Signs the manifest of the bundle the installer ships
+           BUNDLE_SIGNING_KEY_ID: ${{ secrets.BUNDLE_SIGNING_KEY_ID }}
          run: |
--          cd ./wowup-electron
-+          cd ./WowUp/wowup-electron
+-          cd ./wowup-shell
++          cd ./WowUp/wowup-shell
+           npm ci
+           cd ../wowup-electron
            npm i
-           npm run electron:publish
- 
-@@ -71,14 +71,14 @@
+@@ -117,7 +117,7 @@
            NOTARIZE_APPLE_PASSWORD: ${{ secrets.NOTARIZE_APPLE_PASSWORD }}
            NOTARIZE_APPLE_TEAM_ID: ${{ secrets.NOTARIZE_APPLE_TEAM_ID }}
          run: |
--          cd ./wowup-electron
-+          cd ./WowUp/wowup-electron
+-          cd ./wowup-shell
++          cd ./WowUp/wowup-shell
+           npm ci
+           cd ../wowup-electron
            npm i
-           npm run electron:publish
- 
+@@ -130,7 +130,7 @@
        - name: Get ssl.com esigner zip file and unzip
          if: matrix.os == 'windows-2022'
          run: |
--          cd ./wowup-electron/electron-build
-+          cd ./WowUp/wowup-electron/electron-build
+-          cd ./wowup-shell/electron-build
++          cd ./WowUp/wowup-shell/electron-build
            mkdir code_signer
            cd ./code_signer
-           Write-Host "Downloading CodeSignTool from GitHub releases..."
-@@ -100,4 +100,4 @@
+           echo "Downloading CodeSignTool from GitHub releases..."
+@@ -154,4 +154,4 @@
            WINDOWS_SIGN_USER_TOTP_NONPROD: ${{ secrets.WINDOWS_SIGN_USER_TOTP_NONPROD }}
            # CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
            # CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
--        run: cd ./wowup-electron && npm i && npm run electron:publish
-+        run: cd ./WowUp/wowup-electron && npm i && npm run electron:publish
+-        run: cd ./wowup-shell && npm ci && cd ../wowup-electron && npm i && npm run build:lib && npm run lint && npm run build:prod && cd ../wowup-shell && npm run electron:publish
++        run: cd ./WowUp/wowup-shell && npm ci && cd ../wowup-electron && npm i && npm run build:lib && npm run lint && npm run build:prod && cd ../wowup-shell && npm run electron:publish
