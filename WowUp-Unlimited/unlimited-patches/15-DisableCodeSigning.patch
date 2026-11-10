@@ -1,0 +1,48 @@
+﻿--- wowup-shell/electron-build/electron-builder.json
++++ wowup-shell/electron-build/electron-builder.json
+@@ -9,17 +9,12 @@
+   "nodeGypRebuild": true,
+   "files": ["dist/**/*.*", "assets/**/*.*", "app/**/*.js", "src/common/**/*.js", "build/Release/*.node"],
+   "win": {
+     "icon": "electron-build/icon.ico",
+     "target": ["nsis", "portable"],
+     "forceCodeSigning": false,
+-    "signtoolOptions": {
+-      "sign": "./electron-build/sign-windows.js",
+-      "signingHashAlgorithms": ["sha256"],
+-      "publisherName": "WowUp LLC"
+-    }
+   },
+   "nsis": {
+     "deleteAppDataOnUninstall": true
+   },
+   "mac": {
+     "icon": "electron-build/icon.icns",
+@@ -24,13 +24,13 @@
+     "target": [
+       {
+         "target": "default",
+         "arch": ["x64", "arm64"]
+       }
+     ],
+-    "hardenedRuntime": true,
++    "hardenedRuntime": false,
+     "entitlements": "./electron-build/entitlements.mac.plist",
+     "extendInfo": {
+       "CFBundleURLTypes": [
+         {
+           "CFBundleTypeRole": "Shell",
+           "CFBundleURLName": "CurseForge",
+--- wowup-shell/electron-build/after-sign.js
++++ wowup-shell/electron-build/after-sign.js
+@@ -28,10 +28,6 @@
+     (name) => !process.env[name]
+   );
+   if (missing.length > 0) {
+-    // A CI build must never ship un-notarized; local builds may skip it.
+-    if (process.env.CI) {
+-      throw new Error(`Cannot notarize ${appId}, missing env vars: ${missing.join(', ')}`);
+-    }
+     console.warn(`Skipping notarization of ${appId}, missing env vars: ${missing.join(', ')}`);
+     return;
+   }
